@@ -1,7 +1,7 @@
 # Чтение токена из файла
 def get_bot_token():
     try:
-        with open('bottoken', 'r') as f:
+        with open('data/bottoken', 'r') as f:
             return f.read().strip()
     except FileNotFoundError:
         print("ОШИБКА: Файл bottoken не найден. Создайте файл с токеном вашего бота.")
