@@ -1,7 +1,8 @@
 import csv
 import os
 import re
-from datetime import datetime
+import json
+from datetime import datetime, time
 import logging
 import asyncio
 from aiogram import Bot, Dispatcher, types, F
@@ -15,11 +16,12 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQu
 logging.basicConfig(level=logging.INFO)
 
 # Токен вашего бота
-API_TOKEN = '8069233462:AAETcgqI5kUYkeg3gCXCnmGXAzXbLMgYjoY'
+API_TOKEN = bottoken
 
-# Пути к файлам CSV
+# Пути к файлам CSV и JSON
 USERS_CSV = 'users_data.csv'
 PLACES_CSV = 'places.csv'
+USERS_TO_MATCH_JSON = 'users_to_match.json'
 
 # Список офисов
 OFFICES = ["Аврора", "Сити: Нева", "Сити: Око", "Красная роза", "Лотте", "Бенуа"]
@@ -27,6 +29,43 @@ OFFICES = ["Аврора", "Сити: Нева", "Сити: Око", "Красн
 # Глобальные переменные для хранения данных из CSV
 PLACES = []
 PLACES_BY_OFFICE = {}
+
+# Варианты времени для выбора
+TIME_OPTIONS = [
+    "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", 
+    "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+]
+
+# Обновленные размеры компании
+COMPANY_SIZES = ["1", "2", "3-5", "6+"]
+
+# Определение длительности обеда
+LUNCH_DURATIONS = ["30", "45", "60", "90"]
+
+# Определение состояний FSM для основного меню и анкеты
+class Form(StatesGroup):
+    office = State()
+    select_time_start = State()
+    select_time_end = State()
+    add_more_slots = State()
+    lunch_duration = State()
+    favorite_places = State()
+    disliked_places = State()
+    company_size = State()
+    confirmation = State()
+
+# Состояния для главного меню и записи на обед
+class MainMenu(StatesGroup):
+    main = State()
+    lunch_booking = State()
+    lunch_preference = State()
+    lunch_time_start = State()
+    lunch_time_end = State()
+    lunch_place = State()
+    lunch_company_size = State()
+    lunch_confirmation = State()
+    edit_profile = State()
+    edit_field = State()
 
 # Загрузка мест для обеда из CSV-файла
 def load_places():
@@ -63,21 +102,6 @@ def load_places():
     
     return place_names
 
-# Определение длительности обеда и размеров компании
-LUNCH_DURATIONS = ["30", "45", "60", "90"]
-COMPANY_SIZES = ["1", "2", "3", "4", "5+"]
-
-# Определение состояний FSM
-class Form(StatesGroup):
-    office = State()
-    time_slots = State()
-    add_more_slots = State()
-    lunch_duration = State()
-    favorite_places = State()
-    disliked_places = State()
-    company_size = State()
-    confirmation = State()
-
 # Функция для проверки существования файла CSV и его создания при необходимости
 def ensure_csv_exists():
     if not os.path.exists(USERS_CSV):
@@ -85,6 +109,12 @@ def ensure_csv_exists():
             writer = csv.writer(file)
             writer.writerow(['user_id', 'username', 'office', 'time_slots', 'lunch_duration', 
                             'favorite_places', 'disliked_places', 'company_size', 'last_updated'])
+
+# Функция для проверки существования JSON файла для матчинга
+def ensure_json_exists():
+    if not os.path.exists(USERS_TO_MATCH_JSON):
+        with open(USERS_TO_MATCH_JSON, 'w', encoding='utf-8') as file:
+            json.dump([], file, ensure_ascii=False, indent=2)
 
 # Функция для сохранения/обновления данных пользователя в CSV
 def save_user_data(user_id, username, data):
@@ -126,6 +156,67 @@ def save_user_data(user_id, username, data):
                         'favorite_places', 'disliked_places', 'company_size', 'last_updated'])
         writer.writerows(rows)
 
+# Функция для получения данных пользователя из CSV
+def get_user_data(user_id):
+    if not os.path.exists(USERS_CSV):
+        return None
+    
+    with open(USERS_CSV, 'r', newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
+        header = next(reader)  # Пропускаем заголовок
+        for row in reader:
+            if row and row[0] == str(user_id):
+                # Преобразуем строки обратно в списки
+                time_slots = [slot.split('-') for slot in row[3].split(';')] if row[3] else []
+                favorite_places = row[5].split(';') if row[5] else []
+                disliked_places = row[6].split(';') if row[6] else []
+                company_size = row[7].split(';') if row[7] else []
+                
+                return {
+                    'office': row[2],
+                    'time_slots': time_slots,
+                    'lunch_duration': row[4],
+                    'favorite_places': favorite_places,
+                    'disliked_places': disliked_places,
+                    'company_size': company_size,
+                    'last_updated': row[8]
+                }
+    
+    return None
+
+# Функция для обновления данных пользователя в файле users_to_match.json
+def update_user_to_match(username, parameters):
+    ensure_json_exists()
+    
+    users = []
+    user_exists = False
+    
+    # Читаем существующие данные
+    if os.path.exists(USERS_TO_MATCH_JSON):
+        with open(USERS_TO_MATCH_JSON, 'r', encoding='utf-8') as file:
+            try:
+                users = json.load(file)
+            except json.JSONDecodeError:
+                users = []
+    
+    # Ищем пользователя и обновляем его данные
+    for user in users:
+        if user.get('login') == username:
+            user['parameters'] = parameters
+            user_exists = True
+            break
+    
+    # Если пользователя нет, добавляем его
+    if not user_exists:
+        users.append({
+            "login": username,
+            "parameters": parameters
+        })
+    
+    # Записываем обновленные данные
+    with open(USERS_TO_MATCH_JSON, 'w', encoding='utf-8') as file:
+        json.dump(users, file, ensure_ascii=False, indent=2)
+
 # Получение списка мест для конкретного офиса
 def get_places_for_office(office):
     # Если места не сгруппированы по офисам или офис не найден, возвращаем все места
@@ -134,6 +225,30 @@ def get_places_for_office(office):
     
     # Возвращаем только места для указанного офиса
     return [place['name'] for place in PLACES_BY_OFFICE[office]]
+
+# Проверка валидности временного интервала
+def is_valid_time_interval(start_time, end_time):
+    try:
+        start_h, start_m = map(int, start_time.split(':'))
+        end_h, end_m = map(int, end_time.split(':'))
+        
+        start = time(hour=start_h, minute=start_m)
+        end = time(hour=end_h, minute=end_m)
+        
+        return start < end
+    except:
+        return False
+
+# Конвертация данных пользователя в формат для users_to_match.json
+def convert_to_match_format(data, username):
+    return {
+        "office": data.get('office', ''),
+        "time_slots": data.get('time_slots', []),
+        "duration_min": int(data.get('lunch_duration', 30)),
+        "favourite_places": data.get('favorite_places', []),
+        "non_desirable_places": data.get('disliked_places', []),
+        "team_size_lst": data.get('company_size', [])
+    }
 
 # Инициализация бота и диспетчера
 bot = Bot(token=API_TOKEN)
@@ -145,6 +260,29 @@ async def cmd_start(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     username = message.from_user.username or "No username"
     
+    # Проверяем, заполнял ли пользователь анкету ранее
+    user_data = get_user_data(user_id)
+    
+    if user_data:
+        # Если пользователь уже заполнял анкету, показываем главное меню
+        await show_main_menu(message, user_data)
+        await state.set_state(MainMenu.main)
+    else:
+        # Если пользователь новый, начинаем заполнение анкеты
+        await start_profile_creation(message, state)
+
+# Функция для отображения главного меню
+async def show_main_menu(message, user_data=None):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Записаться на обед сегодня", callback_data="menu:book_lunch")],
+        [InlineKeyboardButton(text="Изменить настройки профиля", callback_data="menu:edit_profile")],
+        [InlineKeyboardButton(text="Показать мой профиль", callback_data="menu:show_profile")]
+    ])
+    
+    await message.answer("Главное меню:", reply_markup=keyboard)
+
+# Функция для начала создания профиля
+async def start_profile_creation(message, state):
     # Очищаем предыдущее состояние
     await state.clear()
     
@@ -153,321 +291,319 @@ async def cmd_start(message: types.Message, state: FSMContext):
         [InlineKeyboardButton(text=office, callback_data=f"office:{office}")] for office in OFFICES
     ])
     
-    await message.answer("Привет! Давайте заполним ваш профиль для подбора компании на обед. Для начала, выберите ваш офис:", reply_markup=keyboard)
+    await message.answer("Давайте заполним ваш профиль для подбора компании на обед. Для начала, выберите ваш офис:", reply_markup=keyboard)
     await state.set_state(Form.office)
 
-# Обработчик выбора офиса
-@dp.callback_query(F.data.startswith("office:"), Form.office)
-async def process_office(callback_query: CallbackQuery, state: FSMContext):
-    office = callback_query.data.split(':')[1]
+# Обработчик для главного меню
+@dp.callback_query(F.data.startswith("menu:"), MainMenu.main)
+async def process_main_menu(callback_query: CallbackQuery, state: FSMContext):
+    action = callback_query.data.split(':')[1]
+    user_id = callback_query.from_user.id
+    username = callback_query.from_user.username or f"user{user_id}"
+    user_data = get_user_data(user_id)
     
-    # Сохраняем выбор офиса
-    await state.update_data(office=office)
-    
-    # Редактируем сообщение и просим ввести временной слот
-    await callback_query.message.edit_text(
-        f"Отлично! Вы выбрали офис: {office}\n\nТеперь укажите удобные для вас временные слоты для обеда. Отправьте время в формате ЧЧ:ММ - ЧЧ:ММ, например, 13:00 - 14:30."
-    )
-    
-    # Инициализируем пустой список слотов
-    await state.update_data(time_slots=[])
-    
-    # Переходим к следующему состоянию
-    await state.set_state(Form.time_slots)
-    
-    # Обязательно отвечаем на callback_query
-    await callback_query.answer()
-
-# Обработчик ввода временного слота
-@dp.message(Form.time_slots)
-async def process_time_slot(message: types.Message, state: FSMContext):
-    # Регулярное выражение для проверки формата времени
-    pattern = r'^([01]\d|2[0-3]):([0-5]\d)\s*-\s*([01]\d|2[0-3]):([0-5]\d)$'
-    
-    if re.match(pattern, message.text):
-        # Если формат верный, извлекаем время начала и конца
-        start_time, end_time = message.text.replace(' ', '').split('-')
-        
-        # Получаем текущие слоты
-        data = await state.get_data()
-        time_slots = data.get('time_slots', [])
-        
-        # Добавляем новый слот
-        time_slots.append([start_time, end_time])
-        await state.update_data(time_slots=time_slots)
-        
-        # Создаем клавиатуру для выбора добавления еще одного слота
+    if action == "book_lunch":
+        # Начинаем процесс записи на обед
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Да", callback_data="add_slot:yes"), 
-             InlineKeyboardButton(text="Нет", callback_data="add_slot:no")]
-        ])
-        
-        await message.answer("Слот добавлен. Хотите добавить еще один?", reply_markup=keyboard)
-        await state.set_state(Form.add_more_slots)
-    else:
-        await message.answer("Неверный формат. Пожалуйста, введите время в формате ЧЧ:ММ - ЧЧ:ММ, например, 13:00 - 14:30.")
-
-# Обработчик выбора добавления дополнительного слота
-@dp.callback_query(F.data.startswith("add_slot:"), Form.add_more_slots)
-async def process_add_more_slots(callback_query: CallbackQuery, state: FSMContext):
-    choice = callback_query.data.split(':')[1]
-    
-    if choice == "yes":
-        await callback_query.message.edit_text("Введите следующий слот:")
-        await state.set_state(Form.time_slots)
-    else:
-        # Создаем клавиатуру для выбора длительности обеда
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"{duration} минут", callback_data=f"duration:{duration}")] for duration in LUNCH_DURATIONS
+            [InlineKeyboardButton(text="По моим настройкам из анкеты", callback_data="lunch:by_profile")],
+            [InlineKeyboardButton(text="Изменить настройки для сегодня", callback_data="lunch:custom")]
         ])
         
         await callback_query.message.edit_text(
-            "Понял. Какую длительность обеда вы предпочитаете?",
+            "Как вы хотите найти компанию на обед?",
             reply_markup=keyboard
         )
-        await state.set_state(Form.lunch_duration)
+        
+        await state.set_state(MainMenu.lunch_preference)
+    
+    elif action == "edit_profile":
+        # Начинаем процесс редактирования профиля
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Офис", callback_data="edit:office")],
+            [InlineKeyboardButton(text="Временные слоты", callback_data="edit:time_slots")],
+            [InlineKeyboardButton(text="Длительность обеда", callback_data="edit:duration")],
+            [InlineKeyboardButton(text="Любимые места", callback_data="edit:favorite_places")],
+            [InlineKeyboardButton(text="Нелюбимые места", callback_data="edit:disliked_places")],
+            [InlineKeyboardButton(text="Размер компании", callback_data="edit:company_size")],
+            [InlineKeyboardButton(text="Вернуться в главное меню", callback_data="edit:back")]
+        ])
+        
+        await callback_query.message.edit_text(
+            "Выберите, какие настройки вы хотите изменить:",
+            reply_markup=keyboard
+        )
+        
+        await state.set_state(MainMenu.edit_field)
+    
+    elif action == "show_profile":
+        # Показываем текущий профиль пользователя
+        if user_data:
+            time_slots_formatted = ", ".join([f"{start}-{end}" for start, end in user_data.get('time_slots', [])])
+            
+            profile_text = (
+                "Ваш текущий профиль:\n"
+                f"- Офис: {user_data.get('office', 'Не выбран')}\n"
+                f"- Слоты времени: {time_slots_formatted}\n"
+                f"- Длительность обеда: {user_data.get('lunch_duration', 'Не выбрана')} минут\n"
+                f"- Любимые места: {', '.join(user_data.get('favorite_places', ['Не выбраны']))}\n"
+                f"- Нелюбимые места: {', '.join(user_data.get('disliked_places', ['Не выбраны']))}\n"
+                f"- Размер компании: {', '.join(user_data.get('company_size', ['Не выбран']))}\n"
+                f"- Последнее обновление: {user_data.get('last_updated', '')}"
+            )
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="Вернуться в главное меню", callback_data="menu:back")]
+            ])
+            
+            await callback_query.message.edit_text(
+                profile_text,
+                reply_markup=keyboard
+            )
+        else:
+            await callback_query.message.edit_text(
+                "У вас еще нет профиля. Давайте создадим его!",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="Создать профиль", callback_data="menu:create_profile")]
+                ])
+            )
+    
+    elif action == "back" or action == "create_profile":
+        # Возвращаемся в главное меню или начинаем создание профиля
+        if action == "create_profile":
+            await start_profile_creation(callback_query.message, state)
+        else:
+            await show_main_menu(callback_query.message, user_data)
+            await state.set_state(MainMenu.main)
     
     await callback_query.answer()
 
-# Обработчик выбора длительности обеда
-@dp.callback_query(F.data.startswith("duration:"), Form.lunch_duration)
-async def process_lunch_duration(callback_query: CallbackQuery, state: FSMContext):
-    duration = callback_query.data.split(':')[1]
+# Обработчик для выбора предпочтений обеда
+@dp.callback_query(F.data.startswith("lunch:"), MainMenu.lunch_preference)
+async def process_lunch_preference(callback_query: CallbackQuery, state: FSMContext):
+    choice = callback_query.data.split(':')[1]
+    user_id = callback_query.from_user.id
+    username = callback_query.from_user.username or f"user{user_id}"
+    user_data = get_user_data(user_id)
     
-    # Сохраняем выбранную длительность
-    await state.update_data(lunch_duration=duration)
+    if choice == "by_profile":
+        # Пользователь хочет использовать свои настройки из профиля
+        if user_data:
+            # Конвертируем данные в формат для матчинга и сохраняем
+            match_params = convert_to_match_format(user_data, username)
+            update_user_to_match(username, match_params)
+            
+            await callback_query.message.edit_text(
+                "Отлично! Мы используем ваши настройки из профиля для подбора компании на обед сегодня.\n"
+                "Когда найдется подходящая компания, мы вас оповестим.",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="Вернуться в главное меню", callback_data="menu:back")]
+                ])
+            )
+            
+            await state.set_state(MainMenu.main)
+        else:
+            await callback_query.message.edit_text(
+                "У вас еще нет профиля. Давайте сначала заполним его.",
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="Заполнить профиль", callback_data="menu:create_profile")]
+                ])
+            )
     
-    # Получаем офис пользователя для фильтрации мест
-    data = await state.get_data()
-    office = data.get('office')
+    elif choice == "custom":
+        # Пользователь хочет изменить настройки для сегодняшнего обеда
+        # Начинаем с выбора времени
+        await state.update_data(custom_lunch_data={})
+        
+        # Создаем клавиатуру для выбора времени начала
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=time_opt, callback_data=f"lunch_time_start:{time_opt}")] for time_opt in TIME_OPTIONS
+        ])
+        
+        await callback_query.message.edit_text(
+            "Выберите начало временного слота для сегодняшнего обеда:",
+            reply_markup=keyboard
+        )
+        
+        await state.set_state(MainMenu.lunch_time_start)
     
-    # Получаем места для выбранного офиса
-    places_for_office = get_places_for_office(office)
-    favorite_places = data.get('favorite_places', [])
+    await callback_query.answer()
+
+# Обработчик выбора времени начала для обеда
+@dp.callback_query(F.data.startswith("lunch_time_start:"), MainMenu.lunch_time_start)
+async def process_lunch_time_start(callback_query: CallbackQuery, state: FSMContext):
+    start_time = callback_query.data.split(':')[1]
     
-    # Создаем клавиатуру для выбора любимых мест
+    # Сохраняем выбранное время начала
+    await state.update_data(lunch_start_time=start_time)
+    
+    # Создаем клавиатуру для выбора времени конца
+    # Показываем только времена, которые идут после выбранного начала
+    filtered_times = [t for t in TIME_OPTIONS if t > start_time]
+    
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=f"{'✅ ' if place in favorite_places else ''}{place}", callback_data=f"fav_place:{place}")] for place in places_for_office
-    ] + [[InlineKeyboardButton(text="Готово", callback_data="fav_place:done")]])
+        [InlineKeyboardButton(text=time_opt, callback_data=f"lunch_time_end:{time_opt}")] for time_opt in filtered_times
+    ])
     
     await callback_query.message.edit_text(
-        "Теперь выберите места, которые вам нравятся. Можно выбрать несколько. Когда закончите, нажмите 'Готово'.",
+        f"Выбрано начало: {start_time}\n\nТеперь выберите конец временного слота для обеда:",
         reply_markup=keyboard
     )
     
-    await state.set_state(Form.favorite_places)
+    # Переходим к следующему состоянию
+    await state.set_state(MainMenu.lunch_time_end)
+    
     await callback_query.answer()
 
-# Обработчик выбора любимых мест
-@dp.callback_query(F.data.startswith("fav_place:"), Form.favorite_places)
-async def process_favorite_places(callback_query: CallbackQuery, state: FSMContext):
-    choice = callback_query.data.split(':')[1]
+# Обработчик выбора времени окончания для обеда
+@dp.callback_query(F.data.startswith("lunch_time_end:"), MainMenu.lunch_time_end)
+async def process_lunch_time_end(callback_query: CallbackQuery, state: FSMContext):
+    end_time = callback_query.data.split(':')[1]
     
-    # Получаем текущие данные
+    # Получаем данные из состояния
     data = await state.get_data()
-    office = data.get('office')
-    favorite_places = data.get('favorite_places', [])
+    start_time = data.get('lunch_start_time')
     
-    if choice == "done":
-        # Получаем места для выбранного офиса
-        places_for_office = get_places_for_office(office)
-        disliked_places = data.get('disliked_places', [])
+    # Проверяем валидность интервала
+    if is_valid_time_interval(start_time, end_time):
+        # Обновляем данные
+        custom_lunch_data = data.get('custom_lunch_data', {})
+        custom_lunch_data['time_slots'] = [[start_time, end_time]]
+        await state.update_data(custom_lunch_data=custom_lunch_data)
         
-        # Создаем клавиатуру для выбора нелюбимых мест
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"{'✅ ' if place in disliked_places else ''}{place}", callback_data=f"dis_place:{place}")] for place in places_for_office
-        ] + [[InlineKeyboardButton(text="Готово", callback_data="dis_place:done")]])
-        
-        await callback_query.message.edit_text(
-            "А теперь выберите места, которые вам не нравятся (чтобы мы их избегали):",
-            reply_markup=keyboard
-        )
-        
-        await state.set_state(Form.disliked_places)
-    else:
-        # Обновляем список любимых мест
-        if choice in favorite_places:
-            favorite_places.remove(choice)
-        else:
-            favorite_places.append(choice)
-        
-        await state.update_data(favorite_places=favorite_places)
-        
-        # Получаем места для выбранного офиса и обновляем клавиатуру
-        places_for_office = get_places_for_office(office)
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"{'✅ ' if place in favorite_places else ''}{place}", callback_data=f"fav_place:{place}")] for place in places_for_office
-        ] + [[InlineKeyboardButton(text="Готово", callback_data="fav_place:done")]])
-        
-        await callback_query.message.edit_text(
-            "Теперь выберите места, которые вам нравятся. Можно выбрать несколько. Когда закончите, нажмите 'Готово'.",
-            reply_markup=keyboard
-        )
-    
-    await callback_query.answer()
-
-# Обработчик выбора нелюбимых мест
-@dp.callback_query(F.data.startswith("dis_place:"), Form.disliked_places)
-async def process_disliked_places(callback_query: CallbackQuery, state: FSMContext):
-    choice = callback_query.data.split(':')[1]
-    
-    # Получаем текущие данные
-    data = await state.get_data()
-    office = data.get('office')
-    disliked_places = data.get('disliked_places', [])
-    
-    if choice == "done":
-        # Создаем клавиатуру для выбора размера компании
-        company_size = data.get('company_size', [])
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"{'✅ ' if size in company_size else ''}{size}", callback_data=f"size:{size}")] for size in COMPANY_SIZES
-        ] + [[InlineKeyboardButton(text="Готово", callback_data="size:done")]])
-        
-        await callback_query.message.edit_text(
-            "Почти готово! Укажите предпочитаемый размер компании для обеда (можно выбрать несколько):",
-            reply_markup=keyboard
-        )
-        
-        await state.set_state(Form.company_size)
-    else:
-        # Обновляем список нелюбимых мест
-        if choice in disliked_places:
-            disliked_places.remove(choice)
-        else:
-            disliked_places.append(choice)
-        
-        await state.update_data(disliked_places=disliked_places)
-        
-        # Получаем места для выбранного офиса и обновляем клавиатуру
-        places_for_office = get_places_for_office(office)
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"{'✅ ' if place in disliked_places else ''}{place}", callback_data=f"dis_place:{place}")] for place in places_for_office
-        ] + [[InlineKeyboardButton(text="Готово", callback_data="dis_place:done")]])
-        
-        await callback_query.message.edit_text(
-            "А теперь выберите места, которые вам не нравятся (чтобы мы их избегали):",
-            reply_markup=keyboard
-        )
-    
-    await callback_query.answer()
-
-# Обработчик выбора размера компании
-@dp.callback_query(F.data.startswith("size:"), Form.company_size)
-async def process_company_size(callback_query: CallbackQuery, state: FSMContext):
-    choice = callback_query.data.split(':')[1]
-    
-    # Получаем текущие данные
-    data = await state.get_data()
-    company_size = data.get('company_size', [])
-    
-    if choice == "done":
-        # Форматируем временные слоты для отображения
-        time_slots_formatted = ", ".join([f"{start}-{end}" for start, end in data.get('time_slots', [])])
-        
-        # Создаем текст сводки
-        summary = (
-            "Давайте проверим вашу анкету:\n"
-            f"- Офис: {data.get('office', 'Не выбран')}\n"
-            f"- Слоты времени: {time_slots_formatted}\n"
-            f"- Длительность обеда: {data.get('lunch_duration', 'Не выбрана')} минут\n"
-            f"- Любимые места: {', '.join(data.get('favorite_places', ['Не выбраны']))}\n"
-            f"- Нелюбимые места: {', '.join(data.get('disliked_places', ['Не выбраны']))}\n"
-            f"- Размер компании: {', '.join(data.get('company_size', ['Не выбран']))}"
-        )
-        
-        # Создаем клавиатуру для подтверждения
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Всё верно", callback_data="confirm:yes"), 
-             InlineKeyboardButton(text="Заполнить заново", callback_data="confirm:no")]
-        ])
-        
-        await callback_query.message.edit_text(
-            summary,
-            reply_markup=keyboard
-        )
-        
-        await state.set_state(Form.confirmation)
-    else:
-        # Обновляем список размеров компании
-        if choice in company_size:
-            company_size.remove(choice)
-        else:
-            company_size.append(choice)
-        
-        await state.update_data(company_size=company_size)
-        
-        # Обновляем клавиатуру
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=f"{'✅ ' if size in company_size else ''}{size}", callback_data=f"size:{size}")] for size in COMPANY_SIZES
-        ] + [[InlineKeyboardButton(text="Готово", callback_data="size:done")]])
-        
-        await callback_query.message.edit_text(
-            "Почти готово! Укажите предпочитаемый размер компании для обеда (можно выбрать несколько):",
-            reply_markup=keyboard
-        )
-    
-    await callback_query.answer()
-
-# Обработчик подтверждения анкеты
-@dp.callback_query(F.data.startswith("confirm:"), Form.confirmation)
-async def process_confirmation(callback_query: CallbackQuery, state: FSMContext):
-    choice = callback_query.data.split(':')[1]
-    
-    if choice == "yes":
-        # Сохраняем данные пользователя в CSV
+        # Получаем данные пользователя
         user_id = callback_query.from_user.id
-        username = callback_query.from_user.username or "No username"
-        data = await state.get_data()
+        user_data = get_user_data(user_id)
+        office = user_data.get('office') if user_data else None
         
-        # Проверка, что все необходимые ключи существуют
-        if not data.get('favorite_places'):
-            data['favorite_places'] = []
-        if not data.get('disliked_places'):
-            data['disliked_places'] = []
-        if not data.get('company_size'):
-            data['company_size'] = []
-        
-        save_user_data(user_id, username, data)
-        
-        await callback_query.message.edit_text(
-            "Спасибо! Ваша анкета сохранена."
-        )
-        
-        # Очищаем состояние пользователя
-        await state.clear()
+        if office:
+            # Если есть офис, предлагаем выбор места
+            places_for_office = get_places_for_office(office)
+            
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=place, callback_data=f"lunch_place:{place}")] for place in places_for_office
+            ] + [[InlineKeyboardButton(text="Пропустить (использовать настройки профиля)", callback_data="lunch_place:skip")]])
+            
+            await callback_query.message.edit_text(
+                f"Выбран временной слот: {start_time} - {end_time}\n\nВыберите место для обеда сегодня:",
+                reply_markup=keyboard
+            )
+            
+            await state.set_state(MainMenu.lunch_place)
+        else:
+            # Если офиса нет, пропускаем выбор места и переходим к размеру компании
+            keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=size, callback_data=f"lunch_company:{size}")] for size in COMPANY_SIZES
+            ] + [[InlineKeyboardButton(text="Пропустить (использовать настройки профиля)", callback_data="lunch_company:skip")]])
+            
+            await callback_query.message.edit_text(
+                f"Выбран временной слот: {start_time} - {end_time}\n\nВыберите предпочтительный размер компании для обеда сегодня:",
+                reply_markup=keyboard
+            )
+            
+            await state.set_state(MainMenu.lunch_company_size)
     else:
-        # Начинаем заполнение анкеты заново
-        await callback_query.message.edit_text(
-            "Хорошо, давайте заполним анкету заново."
-        )
-        
-        # Очищаем состояние и возвращаемся к началу
-        await state.clear()
-        
-        # Создаем инлайн-клавиатуру для выбора офиса
+        # Если интервал невалидный, возвращаемся к выбору начала
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=office, callback_data=f"office:{office}")] for office in OFFICES
+            [InlineKeyboardButton(text=time_opt, callback_data=f"lunch_time_start:{time_opt}")] for time_opt in TIME_OPTIONS
         ])
         
-        await callback_query.message.answer(
-            "Для начала, выберите ваш офис:",
+        await callback_query.message.edit_text(
+            "Ошибка: время окончания должно быть позже времени начала.\nПожалуйста, выберите начало временного слота:",
             reply_markup=keyboard
         )
         
-        await state.set_state(Form.office)
+        await state.set_state(MainMenu.lunch_time_start)
     
     await callback_query.answer()
 
-# Запуск бота
-async def main():
-    # Проверяем и создаем файл для хранения данных пользователей, если его нет
-    ensure_csv_exists()
+# Обработчик выбора места для обеда
+@dp.callback_query(F.data.startswith("lunch_place:"), MainMenu.lunch_place)
+async def process_lunch_place(callback_query: CallbackQuery, state: FSMContext):
+    place = callback_query.data.split(':')[1]
     
-    # Загружаем список мест для обеда
-    load_places()
+    # Получаем текущие данные
+    data = await state.get_data()
+    custom_lunch_data = data.get('custom_lunch_data', {})
     
-    # Запускаем бота
-    await dp.start_polling(bot)
+    if place != "skip":
+        # Сохраняем выбранное место
+        custom_lunch_data['favourite_places'] = [place]
+    
+    await state.update_data(custom_lunch_data=custom_lunch_data)
+    
+    # Переходим к выбору размера компании
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=size, callback_data=f"lunch_company:{size}")] for size in COMPANY_SIZES
+    ] + [[InlineKeyboardButton(text="Пропустить (использовать настройки профиля)", callback_data="lunch_company:skip")]])
+    
+    await callback_query.message.edit_text(
+        "Выберите предпочтительный размер компании для обеда сегодня:",
+        reply_markup=keyboard
+    )
+    
+    await state.set_state(MainMenu.lunch_company_size)
+    
+    await callback_query.answer()
 
-if __name__ == '__main__':
-    asyncio.run(main())
+# Обработчик выбора размера компании для обеда
+@dp.callback_query(F.data.startswith("lunch_company:"), MainMenu.lunch_company_size)
+async def process_lunch_company(callback_query: CallbackQuery, state: FSMContext):
+    company_size = callback_query.data.split(':')[1]
+    
+    # Получаем текущие данные
+    data = await state.get_data()
+    custom_lunch_data = data.get('custom_lunch_data', {})
+    
+    if company_size != "skip":
+        # Сохраняем выбранный размер компании
+        custom_lunch_data['team_size_lst'] = [company_size]
+    
+    await state.update_data(custom_lunch_data=custom_lunch_data)
+    
+    # Формируем сводку и переходим к подтверждению
+    user_id = callback_query.from_user.id
+    username = callback_query.from_user.username or f"user{user_id}"
+    user_data = get_user_data(user_id)
+    
+    # Подготавливаем параметры для записи
+    if user_data:
+        # Берем базовые параметры из профиля
+        match_params = convert_to_match_format(user_data, username)
+        
+        # Обновляем их кастомными данными на сегодня
+        if 'time_slots' in custom_lunch_data:
+            match_params['time_slots'] = custom_lunch_data['time_slots']
+        if 'favourite_places' in custom_lunch_data:
+            match_params['favourite_places'] = custom_lunch_data['favourite_places']
+        if 'team_size_lst' in custom_lunch_data:
+            match_params['team_size_lst'] = custom_lunch_data['team_size_lst']
+        
+        # Формируем текст с параметрами
+        time_slots_formatted = ", ".join([f"{start}-{end}" for start, end in match_params['time_slots']])
+        
+        summary = (
+            "Параметры для подбора обеда сегодня:\n"
+            f"- Офис: {match_params.get('office', 'Не выбран')}\n"
+            f"- Слот времени: {time_slots_formatted}\n"
+            f"- Длительность обеда: {match_params.get('duration_min', 'Не выбрана')} минут\n"
+            f"- Предпочитаемые места: {', '.join(match_params.get('favourite_places', ['Не выбраны']))}\n"
+            f"- Нежелательные места: {', '.join(match_params.get('non_desirable_places', ['Не указаны']))}\n"
+            f"- Размер компании: {', '.join(match_params.get('team_size_lst', ['Не выбран']))}"
+        )
+        
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Подтвердить", callback_data="lunch_confirm:yes")],
+            [InlineKeyboardButton(text="Отменить и вернуться в меню", callback_data="lunch_confirm:no")]
+        ])
+        
+        await callback_query.message.edit_text(
+            f"{summary}\n\nПодтвердите запись на обед с этими параметрами:",
+            reply_markup=keyboard
+        )
+        
+        await state.set_state(MainMenu.lunch_confirmation)
+    
+    await callback_query.answer()
+
+# Обработчик подтверждения обеда
+@dp.callback_query(F.data.startswith("lunch_confirm:"), MainMenu.lunch_confirmation)
