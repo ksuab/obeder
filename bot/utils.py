@@ -185,7 +185,7 @@ def convert_to_match_format(data, username):
     return {
         "office": data.get('office', ''),
         "time_slots": data.get('time_slots', []),
-        "duration_min": int(data.get('lunch_duration', 30)),
+        "max_lunch_duration": int(data.get('lunch_duration', 30)),
         "favourite_places": data.get('favorite_places', []),
         "non_desirable_places": data.get('disliked_places', []),
         "team_size_lst": data.get('company_size', [])

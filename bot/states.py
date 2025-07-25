@@ -19,6 +19,7 @@ class MainMenu(StatesGroup):
     lunch_time_start = State()
     lunch_time_end = State()
     lunch_time_add_more = State()
+    lunch_duration = State()
     lunch_place = State()
     lunch_company_size = State()
     lunch_confirmation = State()

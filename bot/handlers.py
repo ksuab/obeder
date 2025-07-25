@@ -24,7 +24,11 @@ logger = logging.getLogger(__name__)
 # Базовые функции
 async def show_main_menu(message, user_data=None):
     keyboard = get_main_menu_keyboard()
-    await message.answer("Главное меню:", reply_markup=keyboard)
+    # Корректно различаем Message и CallbackQuery.message
+    if isinstance(message, Message):
+        await message.answer("Главное меню:", reply_markup=keyboard)
+    else:
+        await message.edit_text("Главное меню:", reply_markup=keyboard)
 
 async def start_profile_creation(message, state):
     await state.clear()
@@ -85,6 +89,7 @@ async def process_main_menu(callback_query: CallbackQuery, state: FSMContext):
             
             keyboard = get_back_to_menu_keyboard()
             await callback_query.message.edit_text(profile_text, reply_markup=keyboard)
+            await state.set_state(MainMenu.main)
         else:
             await callback_query.message.edit_text(
                 "У вас еще нет профиля. Давайте создадим его!",
@@ -195,19 +200,33 @@ async def process_lunch_time_add_more(callback_query: CallbackQuery, state: FSMC
         )
         await state.set_state(MainMenu.lunch_time_start)
     else:
-        data = await state.get_data()
-        user_id = callback_query.from_user.id
-        user_data = get_user_data(user_id)
-        office = user_data.get('office') if user_data else None
-        places_for_office = get_places_for_office(office)
-        custom_lunch_data = data.get('custom_lunch_data', {})
-        fav_places = custom_lunch_data.get('favourite_places', [])
-        keyboard = get_lunch_favorite_places_keyboard(places_for_office, fav_places)
+        # После выбора всех временных слотов — выбор длительности обеда
+        keyboard = get_lunch_duration_keyboard()
         await callback_query.message.edit_text(
-            "Выберите места, которые вам нравятся для обеда сегодня. Можно выбрать несколько. Когда закончите, нажмите 'Готово'.",
+            "Выберите длительность обеда на сегодня:",
             reply_markup=keyboard
         )
-        await state.set_state(MainMenu.lunch_place)
+        await state.set_state(MainMenu.lunch_duration)
+    await callback_query.answer()
+
+# Новый обработчик для выбора длительности обеда в custom lunch
+async def process_lunch_custom_duration(callback_query: CallbackQuery, state: FSMContext):
+    duration = callback_query.data.split(':')[1]
+    data = await state.get_data()
+    custom_lunch_data = data.get('custom_lunch_data', {})
+    custom_lunch_data['max_lunch_duration'] = int(duration)
+    await state.update_data(custom_lunch_data=custom_lunch_data)
+    user_id = callback_query.from_user.id
+    user_data = get_user_data(user_id)
+    office = user_data.get('office') if user_data else None
+    places_for_office = get_places_for_office(office)
+    fav_places = custom_lunch_data.get('favourite_places', [])
+    keyboard = get_lunch_favorite_places_keyboard(places_for_office, fav_places)
+    await callback_query.message.edit_text(
+        "Выберите места, которые вам нравятся для обеда сегодня. Можно выбрать несколько. Когда закончите, нажмите 'Готово'.",
+        reply_markup=keyboard
+    )
+    await state.set_state(MainMenu.lunch_place)
     await callback_query.answer()
 
 async def process_lunch_place(callback_query: CallbackQuery, state: FSMContext):
@@ -257,12 +276,14 @@ async def process_lunch_company(callback_query: CallbackQuery, state: FSMContext
             match_params['favourite_places'] = custom_lunch_data['favourite_places']
         if 'team_size_lst' in custom_lunch_data:
             match_params['team_size_lst'] = custom_lunch_data['team_size_lst']
+        if 'max_lunch_duration' in custom_lunch_data:
+            match_params['max_lunch_duration'] = custom_lunch_data['max_lunch_duration']
         time_slots_formatted = ", ".join([f"{start}-{end}" for start, end in match_params['time_slots']])
         summary = (
             "Проверьте ваши параметры для подбора обеда сегодня:\n"
             f"- Офис: {match_params.get('office', 'Не выбран')}\n"
             f"- Слоты времени: {time_slots_formatted}\n"
-            f"- Длительность обеда: {match_params.get('duration_min', 'Не выбрана')} минут\n"
+            f"- Длительность обеда: {match_params.get('max_lunch_duration', 'Не выбрана')} минут\n"
             f"- Любимые места: {', '.join(match_params.get('favourite_places', ['Не выбраны']))}\n"
             f"- Размер компании: {', '.join(match_params.get('team_size_lst', ['Не выбран']))}"
         )
@@ -310,6 +331,8 @@ async def process_lunch_confirmation(callback_query: CallbackQuery, state: FSMCo
                 match_params['favourite_places'] = custom_lunch_data['favourite_places']
             if 'team_size_lst' in custom_lunch_data:
                 match_params['team_size_lst'] = custom_lunch_data['team_size_lst']
+            if 'max_lunch_duration' in custom_lunch_data:
+                match_params['max_lunch_duration'] = custom_lunch_data['max_lunch_duration']
             
             # Сохраняем данные для матчинга
             update_user_to_match(username, match_params)
@@ -893,9 +916,9 @@ async def process_confirmation(callback_query: CallbackQuery, state: FSMContext)
 def register_all_handlers(dp):
     # Регистрация обработчиков команд
     dp.message.register(cmd_start, Command("start"))
-    
+
     # Регистрация обработчиков для главного меню
-    dp.callback_query.register(process_main_menu, F.data.startswith("menu:"), MainMenu.main)
+    dp.callback_query.register(process_main_menu, F.data.startswith("menu:"))
     
     # Регистрация обработчиков для анкеты
     dp.callback_query.register(process_office, F.data.startswith("office:"), Form.office)
@@ -913,6 +936,7 @@ def register_all_handlers(dp):
     dp.callback_query.register(process_lunch_time_start, F.data.startswith("lunch_time_start:"), MainMenu.lunch_time_start)
     dp.callback_query.register(process_lunch_time_end, F.data.startswith("lunch_time_end:"), MainMenu.lunch_time_end)
     dp.callback_query.register(process_lunch_time_add_more, F.data.startswith("add_slot:"), MainMenu.lunch_time_add_more)
+    dp.callback_query.register(process_lunch_custom_duration, F.data.startswith("lunch_duration:"), MainMenu.lunch_duration)
     dp.callback_query.register(process_lunch_place, F.data.startswith("lunch_place:"), MainMenu.lunch_place)
     dp.callback_query.register(process_lunch_company, F.data.startswith("lunch_company:"), MainMenu.lunch_company_size)
     dp.callback_query.register(process_lunch_confirmation, F.data.startswith("lunch_confirm:"), MainMenu.lunch_confirmation)

@@ -29,8 +29,10 @@ def get_add_slot_keyboard():
 
 # Клавиатура выбора длительности обеда
 def get_lunch_duration_keyboard():
+    from config import LUNCH_DURATIONS
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=f"{duration} минут", callback_data=f"duration:{duration}")] for duration in LUNCH_DURATIONS
+        [InlineKeyboardButton(text=f"{duration} минут", callback_data=f"lunch_duration:{duration}")] for duration in LUNCH_DURATIONS
     ])
 
 # Клавиатура выбора любимых мест

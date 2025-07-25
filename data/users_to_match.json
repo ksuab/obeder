@@ -5,13 +5,13 @@
       "office": "Аврора",
       "time_slots": [
         [
-          "12:00",
-          "14:30"
+          "12:30",
+          "14:00"
         ]
       ],
-      "duration_min": 45,
+      "max_lunch_duration": 45,
       "favourite_places": [
-        "Burger King"
+        "Coffee House"
       ],
       "non_desirable_places": [
         "Burger King",
