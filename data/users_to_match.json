@@ -1,0 +1,27 @@
+[
+  {
+    "login": "evenolt",
+    "parameters": {
+      "office": "Аврора",
+      "time_slots": [
+        [
+          "14:00",
+          "16:00"
+        ]
+      ],
+      "duration_min": 45,
+      "favourite_places": [
+        "Snedi",
+        "Mama",
+        "Restaurant Elite"
+      ],
+      "non_desirable_places": [
+        "Burger King",
+        "Quick Bite"
+      ],
+      "team_size_lst": [
+        "18+"
+      ]
+    }
+  }
+]

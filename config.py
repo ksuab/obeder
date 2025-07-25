@@ -1,19 +1,22 @@
-# Чтение токена из файла
+import os
 def get_bot_token():
     try:
-        with open('data/bottoken', 'r') as f:
+        with open('data/bottoken.txt', 'r') as f:
             return f.read().strip()
     except FileNotFoundError:
-        print("ОШИБКА: Файл bottoken не найден. Создайте файл с токеном вашего бота.")
+        logger.error("Файл с токеном не найден! Создайте файл data/bottoken с токеном бота")
         exit(1)
 
-# Токен бота
-API_TOKEN = get_bot_token()
+BOT_TOKEN = get_bot_token()
 
 # Пути к файлам данных
-USERS_CSV = 'users_data.csv'
-PLACES_CSV = 'places.csv'
-USERS_TO_MATCH_JSON = 'users_to_match.json'
+DATA_DIR = 'data'
+USERS_CSV = os.path.join(DATA_DIR, 'users_data.csv')
+PLACES_CSV = os.path.join(DATA_DIR, 'places.csv')
+USERS_TO_MATCH_JSON = os.path.join(DATA_DIR, 'users_to_match.json')
+
+# Создаем папку data, если ее нет
+os.makedirs(DATA_DIR, exist_ok=True)
 
 # Список офисов
 OFFICES = ["Аврора", "Сити: Нева", "Сити: Око", "Красная роза", "Лотте", "Бенуа"]
@@ -25,7 +28,7 @@ TIME_OPTIONS = [
 ]
 
 # Размеры компании
-COMPANY_SIZES = ["1", "2", "3-5", "6+"]
+COMPANY_SIZES = ["1", "2", "3-5", "6+", "18+"]
 
 # Длительность обеда
 LUNCH_DURATIONS = ["30", "45", "60", "90"]

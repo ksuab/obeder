@@ -10,14 +10,14 @@ def get_office_keyboard():
 # Клавиатура выбора времени начала
 def get_time_start_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=time_opt, callback_data=f"time_start:{time_opt}")] for time_opt in TIME_OPTIONS
+        [InlineKeyboardButton(text=(time_opt if ':' in time_opt else f"{int(time_opt):02d}:00"), callback_data=f"time_start:{(time_opt if ':' in time_opt else f'{int(time_opt):02d}:00')}" )] for time_opt in TIME_OPTIONS
     ])
 
 # Клавиатура выбора времени конца
 def get_time_end_keyboard(start_time):
     filtered_times = [t for t in TIME_OPTIONS if t > start_time]
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=time_opt, callback_data=f"time_end:{time_opt}")] for time_opt in filtered_times
+        [InlineKeyboardButton(text=(time_opt if ':' in time_opt else f"{int(time_opt):02d}:00"), callback_data=f"time_end:{(time_opt if ':' in time_opt else f'{int(time_opt):02d}:00')}" )] for time_opt in filtered_times
     ])
 
 # Клавиатура добавления еще одного слота
