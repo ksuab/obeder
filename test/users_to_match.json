@@ -7,7 +7,18 @@
       "max_lunch_duration": 30,
       "favourite_places": ["Snedi", "Burger King"],
       "non_desirable_places": [],
-      "team_size_lst": ["2", "3-5"]
+      "team_size_lst": ["18+"]
+    }
+  },
+  {
+    "login": "test_18plus",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["12:00", "13:00"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi"],
+      "non_desirable_places": [],
+      "team_size_lst": ["18+"]
     }
   },
   {

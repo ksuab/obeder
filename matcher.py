@@ -134,17 +134,33 @@ def find_common_time_slot(users: List[Dict]) -> Optional[Tuple[str, str]]:
 
 
 def is_team_size_compatible(users: List[Dict], team_size: int) -> bool:
+    """
+    Проверяет, что размер группы (team_size) разрешён КАЖДЫМ пользователем.
+    Каждый пользователь может указать несколько форматов: ["2", "6+", "18+"] и т.д.
+    Достаточно, чтобы ХОТЯ БЫ ОДИН из форматов разрешал данный размер.
+    """
     for user in users:
-        allowed = user["parameters"]["team_size_lst"]
-        fits = False
-        if team_size == 2 and "2" in allowed:
-            fits = True
-        if 3 <= team_size <= 5 and "3-5" in allowed:
-            fits = True
-        if team_size >= 6 and "6+" in allowed:
-            fits = True
-        if not fits:
-            return False
+        allowed = False
+        for size_range in user["parameters"]["team_size_lst"]:
+            if size_range == "2":
+                if team_size == 2:
+                    allowed = True
+                    break
+            elif size_range == "3-5":
+                if 3 <= team_size <= 5:
+                    allowed = True
+                    break
+            elif size_range.endswith("+"):
+                try:
+                    min_size = int(size_range.replace("+", ""))
+                    if team_size >= min_size:
+                        allowed = True
+                        break
+                except ValueError:
+                    continue  # игнорируем некорректные форматы
+            # Если формат не распознан — пропускаем
+        if not allowed:
+            return False  # если хоть один пользователь не разрешает размер — всё
     return True
 
 

@@ -1,7 +1,6 @@
 [
   {
     "participants": [
-      "user1",
       "user11",
       "user2",
       "user22",
@@ -99,6 +98,22 @@
     ],
     "place": "Burger King",
     "maps_link": "https://yandex.ru/maps/-/CHTZm2LQ"
+  },
+  {
+    "participants": [
+      "user1"
+    ],
+    "lunch_time": null,
+    "place": null,
+    "maps_link": null
+  },
+  {
+    "participants": [
+      "test_18plus"
+    ],
+    "lunch_time": null,
+    "place": null,
+    "maps_link": null
   },
   {
     "participants": [

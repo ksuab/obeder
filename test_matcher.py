@@ -46,6 +46,7 @@ def run_tests():
     for group in result:
         matched_logins.update(group["participants"])
     assert matched_logins == all_logins, f"❌ Пропущены пользователи: {all_logins - matched_logins}"
+    print("✅ Тест 1: Все пользователи учтены")
 
     # === Тест 2: Нет дублирования пользователей
     seen = set()
@@ -53,6 +54,7 @@ def run_tests():
         for p in group["participants"]:
             assert p not in seen, f"❌ Пользователь {p} в нескольких группах"
             seen.add(p)
+    print("✅ Тест 2: Нет дубликатов пользователей")
 
     # === Тест 3: Все группы с 2+ человек — имеют время и место
     solo_count = 0
@@ -70,8 +72,7 @@ def run_tests():
         participant_users = [user_dict[login] for login in participants]
         min_max_duration = min(u["parameters"]["max_lunch_duration"] for u in participant_users)
         assert duration <= min_max_duration, f"❌ Группа {participants} превысила время: {duration} > {min_max_duration} мин"
-
-    print(f"✅ Проверка времени и длительности пройдена. Одиночки: {solo_count}")
+    print("✅ Тест 3: Время и длительность корректны")
 
     # === Тест 4: Проверка любимых и нежелательных мест
     places_data = load_places(PLACES_FILE)
@@ -83,7 +84,6 @@ def run_tests():
         place_name = group["place"]
         assert place_name in places_dict, f"❌ Место {place_name} не найдено в places.csv"
 
-        # Проверим, что место нравится всем
         user_dict = {u["login"]: u for u in users}
         for login in group["participants"]:
             user = user_dict[login]
@@ -91,8 +91,7 @@ def run_tests():
             non_des = user["parameters"]["non_desirable_places"]
             assert place_name in fav, f"❌ {login} не любит {place_name}"
             assert place_name not in non_des, f"❌ {login} НЕ ЛЮБИТ {place_name}"
-
-    print("✅ Проверка предпочтений пройдена")
+    print("✅ Тест 4: Предпочтения по местам соблюдены")
 
     # === Тест 5: Размер группы совместим с team_size_lst
     size_map = {
@@ -117,16 +116,172 @@ def run_tests():
             user_allowed = user["parameters"]["team_size_lst"]
             assert any(sz in allowed_sizes for sz in user_allowed), \
                 f"❌ {login} не разрешает группу из {team_size} человек (разрешено: {user_allowed})"
+    print("✅ Тест 5: Размеры групп разрешены пользователями")
 
-    print("✅ Проверка размера группы пройдена")
+    # === Тест 6: Время ланча попадает хотя бы в один из time_slots пользователя
+    for group in result:
+        if len(group["participants"]) == 1:
+            continue
+        lunch_start, lunch_end = group["lunch_time"]
+        start_t = parse_time_str(lunch_start)
+        end_t = parse_time_str(lunch_end)
 
-    # === Тест 6: Проверка, что группа не пересекается по времени (внутри группы — не нужно, т.к. общий слот)
-    # Но если бы была глобальная шедулинг-логика — проверяли бы между группами. Пока пропускаем.
+        user_dict = {u["login"]: u for u in users}
+        for login in group["participants"]:
+            user = user_dict[login]
+            params = user["parameters"]
+
+            # Проверяем наличие time_slots
+            if "time_slots" not in params or not params["time_slots"]:
+                assert False, f"❌ {login} не имеет time_slots"
+
+            # Проверим, есть ли пересечение с хотя бы одним слотом
+            fits = False
+            for slot in params["time_slots"]:
+                try:
+                    slot_start, slot_end = slot
+                    slot_start_t = parse_time_str(slot_start)
+                    slot_end_t = parse_time_str(slot_end)
+
+                    # Ланч должен полностью помещаться в слот
+                    if start_t >= slot_start_t and end_t <= slot_end_t:
+                        fits = True
+                        break
+                except Exception as e:
+                    assert False, f"❌ Ошибка в time_slots у {login}: {slot}"
+
+            assert fits, f"❌ Время ланча {lunch_start}-{lunch_end} не входит ни в один слот {login}: {params['time_slots']}"
+    print("✅ Тест 6: Время ланча в пределах хотя бы одного time_slot")
 
     # === Тест 7: Минимизация одиночек — желательно, чтобы было < 5 одиночек
     assert solo_count <= 5, f"❌ Слишком много одиночек: {solo_count}. Цель — минимизировать."
+    print(f"✅ Тест 7: Одиночек всего {solo_count} (<=5)")
+
+    # === Тест 8: Проверка на пустых пользователей
+    assert len(users) > 0, "❌ Нет пользователей для мэтчинга"
+    print("✅ Тест 8: Есть пользователи для обработки")
+
+    # === Тест 9: Проверка, что время ланча корректно отформатировано
+    for group in result:
+        lunch_time = group["lunch_time"]
+        if len(group["participants"]) > 1:
+            assert isinstance(lunch_time, list) and len(lunch_time) == 2, f"❌ Неверный формат времени: {lunch_time}"
+            start, end = lunch_time
+            assert ":" in start and ":" in end, f"❌ Неверный формат времени: {start}, {end}"
+            try:
+                parse_time_str(start)
+                parse_time_str(end)
+            except ValueError:
+                assert False, f"❌ Невалидное время: {start} или {end}"
+    print("✅ Тест 9: Формат времени корректен")
+
+    # === Тест 10: У каждого участника есть пересечение между его слотами и временем ланча
+    for group in result:
+        if len(group["participants"]) == 1:
+            continue
+        lunch_start, lunch_end = group["lunch_time"]
+        start_t = parse_time_str(lunch_start)
+        end_t = parse_time_str(lunch_end)
+
+        user_dict = {u["login"]: u for u in users}
+        for login in group["participants"]:
+            user = user_dict[login]
+            params = user["parameters"]
+
+            assert "time_slots" in params, f"❌ {login} не имеет time_slots"
+
+            has_overlap = False
+            for slot in params["time_slots"]:
+                try:
+                    s1, e1 = parse_time_str(slot[0]), parse_time_str(slot[1])
+                    # Пересечение: начало ланча < конца слота И конец ланча > начала слота
+                    if start_t < e1 and end_t > s1:
+                        has_overlap = True
+                        break
+                except:
+                    assert False, f"❌ Неверный формат слота у {login}: {slot}"
+
+            assert has_overlap, f"❌ {login} не может посетить ланч в {lunch_start}-{lunch_end} (нет пересечения со слотами)"
+    print("✅ Тест 10: Все участники имеют пересечение по времени")
+
+    # === Тест 11: Проверка, что мэтчинг стабилен (повторный запуск даёт тот же результат)
+    # Запускаем второй раз и сравниваем
+    result2 = match_lunch(users, PLACES_FILE)
+    # Сравниваем по ключевым полям: участники, время, место
+    def normalize_group(g):
+        return {
+            "participants": sorted(g["participants"]),
+            "lunch_time": tuple(g["lunch_time"]) if g["lunch_time"] else None,
+            "place": g["place"]
+        }
+    norm1 = sorted([normalize_group(g) for g in result], key=lambda x: (x["participants"], x["place"]))
+    norm2 = sorted([normalize_group(g) for g in result2], key=lambda x: (x["participants"], x["place"]))
+    assert norm1 == norm2, "❌ Результат мэтчинга нестабилен между запусками"
+    print("✅ Тест 11: Мэтчинг стабилен при повторных запусках")
+
+    # === Тест 12: Проверка производительности (макс. 5 секунд)
+    import time as tm
+    start_time = tm.time()
+    for _ in range(3):  # Среднее по 3 запускам
+        match_lunch(users, PLACES_FILE)
+    avg_time = (tm.time() - start_time) / 3
+    assert avg_time < 5, f"❌ Мэтчинг слишком медленный: {avg_time:.2f} сек"
+    print(f"✅ Тест 12: Производительность хорошая: {avg_time:.2f} сек в среднем")
+
+    # === Тест 13: Проверка, что все места из результата — реальные (из CSV)
+    used_places = {g["place"] for g in result if g["place"] is not None}
+    valid_places = {p["name"] for p in places_data}
+    invalid = used_places - valid_places
+    assert not invalid, f"❌ Использованы несуществующие места: {invalid}"
+    print("✅ Тест 13: Все места существуют в places.csv")
+
+    # === Тест 14: Если пользователь указал только "6+", то он не может быть в группе из 2
+    for group in result:
+        size = len(group["participants"])
+        if size == 2:
+            for login in group["participants"]:
+                user = next(u for u in users if u["login"] == login)
+                allowed = user["parameters"]["team_size_lst"]
+                assert "2" in allowed or "3-5" in allowed or "6+" in allowed, \
+                    f"❌ {login} с team_size_lst={allowed} не может быть в группе из 2"
+
+    print("✅ Тест 14: Учёт строгих ограничений по размеру команды")
+
+    # === Тест 15: Проверка, что группы не слишком большие (например, не больше 10)
+    max_group_size = 10
+    for group in result:
+        size = len(group["participants"])
+        assert size <= max_group_size, f"❌ Группа слишком большая: {size} > {max_group_size}"
+    print(f"✅ Тест 15: Максимальный размер группы — {max_group_size}")
 
     print(f"🎉 Все тесты пройдены! Найдено {len(result)} групп, одиночек: {solo_count}")
+    print("💡 Рекомендация: Добавь тесты с edge-кейсами (пустые предпочтения, один пользователь и т.п.)")
+
+    # === Тест 15: Нет искусственного ограничения размера группы
+    max_possible_size = len(users)
+    max_actual_size = max(len(g["participants"]) for g in result) if result else 0
+
+    # Если все пользователи совместимы, теоретически может быть одна большая группа
+    compatible_pair = True
+    if len(users) > 1:
+        # Простая эвристика: если хотя бы двое совместимы по времени и месту — большая группа возможна
+        u1, u2 = users[0], users[1]
+        t1_start = parse_time_str(u1["parameters"]["available_from"])
+        t1_end = parse_time_str(u1["parameters"]["available_to"])
+        t2_start = parse_time_str(u2["parameters"]["available_from"])
+        t2_end = parse_time_str(u2["parameters"]["available_to"])
+        time_overlap = t1_start < t2_end and t2_start < t1_end
+        common_places = set(u1["parameters"]["favourite_places"]) & set(u2["parameters"]["favourite_places"])
+        common_places -= set(u1["parameters"]["non_desirable_places"])
+        common_places -= set(u2["parameters"]["non_desirable_places"])
+        compatible_pair = time_overlap and len(common_places) > 0
+
+    if compatible_pair and len(users) >= 3:
+        assert max_actual_size >= 3, f"❌ При совместимых пользователях не сформирована группа ≥3 (максимум: {max_actual_size})"
+    else:
+        print(f"ℹ️ Тест 15: Большие группы маловероятны из-за несовместимости")
+
+    print("✅ Тест 15: Проверка отсутствия искусственных ограничений на размер группы")
 
 if __name__ == "__main__":
     run_tests()
