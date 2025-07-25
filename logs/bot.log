@@ -1,0 +1,247 @@
+2025-07-25 15:45:20,965 INFO main.py запущен
+2025-07-25 15:45:20,995 INFO main.py: запуск asyncio.run(main())
+2025-07-25 15:45:20,995 INFO Загружено 8 мест из файла
+2025-07-25 15:45:20,997 INFO Start polling
+2025-07-25 15:45:21,168 INFO Run polling for bot @FindMeObederBot id=8069233462 - 'ObederBot'
+2025-07-25 15:45:26,676 INFO Update id=112783849 is handled. Duration 209 ms by bot id=8069233462
+2025-07-25 15:45:28,732 INFO Update id=112783850 is handled. Duration 219 ms by bot id=8069233462
+2025-07-25 15:45:29,893 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 15:45:29,894 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:45:30,153 INFO Update id=112783851 is handled. Duration 264 ms by bot id=8069233462
+2025-07-25 15:45:34,551 INFO Update id=112783852 is handled. Duration 91 ms by bot id=8069233462
+2025-07-25 15:45:36,814 INFO Update id=112783853 is handled. Duration 162 ms by bot id=8069233462
+2025-07-25 15:45:39,105 INFO [update_user_to_match] Обновлен пользователь: agmikheeva
+2025-07-25 15:45:39,106 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:45:39,304 INFO Update id=112783854 is handled. Duration 200 ms by bot id=8069233462
+2025-07-25 15:47:25,593 INFO Update id=112783855 is handled. Duration 254 ms by bot id=8069233462
+2025-07-25 15:47:26,752 INFO Update id=112783856 is handled. Duration 167 ms by bot id=8069233462
+2025-07-25 15:47:27,947 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 15:47:27,948 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:47:28,309 INFO Update id=112783857 is handled. Duration 366 ms by bot id=8069233462
+2025-07-25 15:49:37,930 INFO main.py запущен
+2025-07-25 15:49:37,958 INFO main.py: запуск asyncio.run(main())
+2025-07-25 15:49:37,959 INFO Загружено 8 мест из файла
+2025-07-25 15:49:37,961 INFO Start polling
+2025-07-25 15:49:38,117 INFO Run polling for bot @FindMeObederBot id=8069233462 - 'ObederBot'
+2025-07-25 15:49:43,578 INFO Update id=112783858 is handled. Duration 266 ms by bot id=8069233462
+2025-07-25 15:49:44,859 INFO Update id=112783859 is handled. Duration 185 ms by bot id=8069233462
+2025-07-25 15:49:46,023 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 15:49:46,024 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:49:46,210 INFO Update id=112783860 is handled. Duration 191 ms by bot id=8069233462
+2025-07-25 15:49:54,622 INFO Update id=112783861 is handled. Duration 96 ms by bot id=8069233462
+2025-07-25 15:49:57,285 INFO Update id=112783862 is handled. Duration 304 ms by bot id=8069233462
+2025-07-25 15:49:57,387 INFO Update id=112783863 is not handled. Duration 268 ms by bot id=8069233462
+2025-07-25 15:49:57,387 ERROR Cause exception while process update id=112783863 by bot id=8069233462
+TelegramBadRequest: Telegram server says - Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/dispatcher.py", line 308, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/dispatcher.py", line 157, in feed_update
+    response = await self.update.wrap_outer_middleware(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/middlewares/error.py", line 25, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/middlewares/user_context.py", line 27, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/fsm/middleware.py", line 39, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/event/telegram.py", line 120, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/event/handler.py", line 42, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/dispatcher.py", line 275, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/router.py", line 116, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/router.py", line 111, in _wrapped
+    return await self._propagate_event(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/router.py", line 136, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/event/telegram.py", line 120, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/dispatcher/event/handler.py", line 42, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "/Users/evgeniyaolt/Documents/Обедер/obeder/bot/handlers.py", line 65, in process_main_menu
+    await callback_query.message.edit_text(
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/methods/base.py", line 84, in emit
+    return await bot(self)
+           ^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/client/bot.py", line 432, in __call__
+    return await self.session(self, method, timeout=request_timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/client/session/base.py", line 257, in __call__
+    return cast(TelegramType, await middleware(bot, method))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/client/session/aiohttp.py", line 175, in make_request
+    response = self.check_response(
+               ^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/aiogram/client/session/base.py", line 120, in check_response
+    raise TelegramBadRequest(method=method, message=description)
+aiogram.exceptions.TelegramBadRequest: Telegram server says - Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message
+2025-07-25 15:49:58,283 INFO [update_user_to_match] Обновлен пользователь: agmikheeva
+2025-07-25 15:49:58,284 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:49:58,442 INFO Update id=112783864 is handled. Duration 163 ms by bot id=8069233462
+2025-07-25 15:51:27,317 INFO Update id=112783865 is handled. Duration 212 ms by bot id=8069233462
+2025-07-25 15:51:34,309 INFO Update id=112783866 is handled. Duration 209 ms by bot id=8069233462
+2025-07-25 15:51:36,948 INFO Update id=112783867 is handled. Duration 292 ms by bot id=8069233462
+2025-07-25 15:51:38,307 INFO Update id=112783868 is handled. Duration 348 ms by bot id=8069233462
+2025-07-25 15:51:44,205 INFO Update id=112783869 is handled. Duration 150 ms by bot id=8069233462
+2025-07-25 15:51:46,761 INFO Update id=112783870 is handled. Duration 258 ms by bot id=8069233462
+2025-07-25 15:51:48,361 INFO Update id=112783871 is handled. Duration 133 ms by bot id=8069233462
+2025-07-25 15:51:51,557 INFO Update id=112783872 is handled. Duration 146 ms by bot id=8069233462
+2025-07-25 15:51:55,269 INFO Update id=112783873 is handled. Duration 256 ms by bot id=8069233462
+2025-07-25 15:51:56,576 INFO Update id=112783874 is handled. Duration 153 ms by bot id=8069233462
+2025-07-25 15:51:59,486 INFO Update id=112783875 is handled. Duration 305 ms by bot id=8069233462
+2025-07-25 15:52:00,378 INFO Update id=112783876 is handled. Duration 393 ms by bot id=8069233462
+2025-07-25 15:52:01,466 INFO Update id=112783877 is handled. Duration 150 ms by bot id=8069233462
+2025-07-25 15:52:03,257 INFO Update id=112783878 is handled. Duration 128 ms by bot id=8069233462
+2025-07-25 15:52:04,556 INFO Update id=112783879 is handled. Duration 187 ms by bot id=8069233462
+2025-07-25 15:52:09,018 INFO [DEBUG] process_lunch_confirmation start for evenolt
+2025-07-25 15:52:09,021 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 15:52:09,021 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:52:09,022 INFO [DEBUG] about to call run_matcher_and_get_result for evenolt
+2025-07-25 15:52:09,022 INFO [DEBUG] run_matcher_and_get_result вызван для evenolt
+2025-07-25 15:52:09,083 INFO [DEBUG] matcher.py успешно завершён для evenolt
+
+[run_matcher_and_get_result] Запуск matcher.py для evenolt
+[matcher.py stdout]
+📥 Загружаем пользователей из data/users_to_match.json
+🔍 Найдено 2 пользователей
+   - evenolt (max_lunch_duration=45 мин)
+   - agmikheeva (max_lunch_duration=60 мин)
+✅ Найдено 2 групп на обед. Результат сохранён в data/output.json
+
+[matcher.py stderr]
+
+2025-07-25 15:52:09,536 INFO Update id=112783880 is handled. Duration 521 ms by bot id=8069233462
+2025-07-25 15:54:41,501 INFO Update id=112783881 is handled. Duration 292 ms by bot id=8069233462
+2025-07-25 15:54:42,746 INFO Update id=112783882 is handled. Duration 265 ms by bot id=8069233462
+2025-07-25 15:54:44,637 INFO Update id=112783883 is handled. Duration 297 ms by bot id=8069233462
+2025-07-25 15:54:45,826 INFO Update id=112783884 is handled. Duration 373 ms by bot id=8069233462
+2025-07-25 15:54:46,855 INFO Update id=112783885 is handled. Duration 125 ms by bot id=8069233462
+2025-07-25 15:54:48,137 INFO Update id=112783886 is handled. Duration 140 ms by bot id=8069233462
+2025-07-25 15:54:49,313 INFO Update id=112783887 is handled. Duration 126 ms by bot id=8069233462
+2025-07-25 15:54:50,436 INFO Update id=112783888 is handled. Duration 173 ms by bot id=8069233462
+2025-07-25 15:54:52,370 INFO Update id=112783889 is handled. Duration 269 ms by bot id=8069233462
+2025-07-25 15:54:53,413 INFO Update id=112783890 is handled. Duration 286 ms by bot id=8069233462
+2025-07-25 15:54:55,323 INFO Update id=112783891 is handled. Duration 137 ms by bot id=8069233462
+2025-07-25 15:54:56,273 INFO Update id=112783892 is handled. Duration 135 ms by bot id=8069233462
+2025-07-25 15:54:57,909 INFO [DEBUG] process_lunch_confirmation start for evenolt
+2025-07-25 15:54:57,912 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 15:54:57,913 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:54:57,913 INFO [DEBUG] about to call run_matcher_and_get_result for evenolt
+2025-07-25 15:54:57,913 INFO [DEBUG] run_matcher_and_get_result вызван для evenolt
+2025-07-25 15:54:57,977 INFO [DEBUG] matcher.py успешно завершён для evenolt
+
+[run_matcher_and_get_result] Запуск matcher.py для evenolt
+[matcher.py stdout]
+📥 Загружаем пользователей из data/users_to_match.json
+🔍 Найдено 2 пользователей
+   - evenolt (max_lunch_duration=45 мин)
+   - agmikheeva (max_lunch_duration=60 мин)
+✅ Найдено 2 групп на обед. Результат сохранён в data/output.json
+
+[matcher.py stderr]
+
+2025-07-25 15:54:58,394 INFO Update id=112783893 is handled. Duration 487 ms by bot id=8069233462
+2025-07-25 15:56:52,235 INFO main.py запущен
+2025-07-25 15:56:52,264 INFO main.py: запуск asyncio.run(main())
+2025-07-25 15:56:52,265 INFO Загружено 8 мест из файла
+2025-07-25 15:56:52,266 INFO Start polling
+2025-07-25 15:56:52,471 INFO Run polling for bot @FindMeObederBot id=8069233462 - 'ObederBot'
+2025-07-25 15:56:59,079 INFO Update id=112783894 is handled. Duration 325 ms by bot id=8069233462
+2025-07-25 15:57:00,459 INFO Update id=112783895 is handled. Duration 208 ms by bot id=8069233462
+2025-07-25 15:57:02,544 INFO Update id=112783896 is handled. Duration 150 ms by bot id=8069233462
+2025-07-25 15:57:04,369 INFO Update id=112783897 is handled. Duration 319 ms by bot id=8069233462
+2025-07-25 15:57:06,035 INFO Update id=112783898 is handled. Duration 329 ms by bot id=8069233462
+2025-07-25 15:57:07,395 INFO Update id=112783899 is handled. Duration 350 ms by bot id=8069233462
+2025-07-25 15:57:08,559 INFO Update id=112783900 is handled. Duration 187 ms by bot id=8069233462
+2025-07-25 15:57:09,676 INFO Update id=112783901 is handled. Duration 168 ms by bot id=8069233462
+2025-07-25 15:57:11,514 INFO Update id=112783902 is handled. Duration 146 ms by bot id=8069233462
+2025-07-25 15:57:13,028 INFO Update id=112783903 is handled. Duration 216 ms by bot id=8069233462
+2025-07-25 15:57:14,070 INFO Update id=112783904 is handled. Duration 177 ms by bot id=8069233462
+2025-07-25 15:57:15,516 INFO Update id=112783905 is handled. Duration 169 ms by bot id=8069233462
+2025-07-25 15:57:16,412 INFO Update id=112783906 is handled. Duration 357 ms by bot id=8069233462
+2025-07-25 15:57:18,234 INFO [DEBUG] process_lunch_confirmation start for evenolt
+2025-07-25 15:57:18,235 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 15:57:18,236 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:57:18,236 INFO [DEBUG] about to call run_matcher_and_get_result for evenolt
+2025-07-25 15:57:18,236 INFO [DEBUG] run_matcher_and_get_result вызван для evenolt
+2025-07-25 15:57:18,287 INFO [DEBUG] matcher.py успешно завершён для evenolt
+
+[run_matcher_and_get_result] Запуск matcher.py для evenolt
+[matcher.py stdout]
+📥 Загружаем пользователей из data/users_to_match.json
+🔍 Найдено 2 пользователей
+   - evenolt (max_lunch_duration=60 мин)
+   - agmikheeva (max_lunch_duration=60 мин)
+✅ Найдено 2 групп на обед. Результат сохранён в data/output.json
+
+[matcher.py stderr]
+
+2025-07-25 15:57:18,609 INFO Update id=112783907 is handled. Duration 376 ms by bot id=8069233462
+2025-07-25 15:58:29,340 INFO Update id=112783908 is handled. Duration 290 ms by bot id=8069233462
+2025-07-25 15:58:30,399 INFO Update id=112783909 is handled. Duration 169 ms by bot id=8069233462
+2025-07-25 15:58:31,555 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 15:58:31,556 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 15:58:31,756 INFO Update id=112783910 is handled. Duration 206 ms by bot id=8069233462
+2025-07-25 16:03:36,767 INFO main.py запущен
+2025-07-25 16:03:36,801 INFO main.py: запуск asyncio.run(main())
+2025-07-25 16:03:36,802 INFO Загружено 8 мест из файла
+2025-07-25 16:03:36,804 INFO Start polling
+2025-07-25 16:03:36,976 INFO Run polling for bot @FindMeObederBot id=8069233462 - 'ObederBot'
+2025-07-25 16:03:40,750 INFO Update id=112783911 is handled. Duration 279 ms by bot id=8069233462
+2025-07-25 16:03:42,080 INFO Update id=112783912 is handled. Duration 178 ms by bot id=8069233462
+2025-07-25 16:03:42,859 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 16:03:42,860 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 16:03:43,014 INFO Update id=112783913 is handled. Duration 160 ms by bot id=8069233462
+2025-07-25 16:06:42,638 INFO Update id=112783914 is handled. Duration 330 ms by bot id=8069233462
+2025-07-25 16:06:43,748 INFO Update id=112783915 is handled. Duration 306 ms by bot id=8069233462
+2025-07-25 16:06:44,635 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 16:06:44,636 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 16:06:44,956 INFO Update id=112783916 is handled. Duration 325 ms by bot id=8069233462
+2025-07-25 16:08:00,804 INFO Update id=112783917 is handled. Duration 376 ms by bot id=8069233462
+2025-07-25 16:08:01,851 INFO Update id=112783918 is handled. Duration 150 ms by bot id=8069233462
+2025-07-25 16:08:02,998 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 16:08:02,999 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 16:08:03,200 INFO Update id=112783919 is handled. Duration 206 ms by bot id=8069233462
+2025-07-25 16:12:26,161 INFO Update id=112783920 is handled. Duration 400 ms by bot id=8069233462
+2025-07-25 16:12:27,563 INFO Update id=112783921 is handled. Duration 211 ms by bot id=8069233462
+2025-07-25 16:12:28,881 INFO [update_user_to_match] Обновлен пользователь: agmikheeva
+2025-07-25 16:12:28,882 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 16:12:29,171 INFO Update id=112783922 is handled. Duration 293 ms by bot id=8069233462
+2025-07-25 16:12:30,609 INFO Update id=112783923 is handled. Duration 168 ms by bot id=8069233462
+2025-07-25 16:12:33,309 INFO Update id=112783924 is handled. Duration 261 ms by bot id=8069233462
+2025-07-25 16:14:39,535 INFO Update id=112783925 is handled. Duration 246 ms by bot id=8069233462
+2025-07-25 16:17:32,797 INFO Update id=112783926 is handled. Duration 250 ms by bot id=8069233462
+2025-07-25 16:17:33,657 INFO Update id=112783927 is handled. Duration 133 ms by bot id=8069233462
+2025-07-25 16:17:34,384 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 16:17:34,385 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 16:17:34,509 INFO Update id=112783928 is handled. Duration 129 ms by bot id=8069233462
+2025-07-25 16:18:50,392 INFO Update id=112783929 is handled. Duration 267 ms by bot id=8069233462
+2025-07-25 16:18:51,379 INFO Update id=112783930 is handled. Duration 133 ms by bot id=8069233462
+2025-07-25 16:18:52,243 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 16:18:52,244 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 16:18:52,565 INFO Update id=112783931 is handled. Duration 327 ms by bot id=8069233462
+2025-07-25 16:18:53,503 INFO Update id=112783932 is handled. Duration 306 ms by bot id=8069233462
+2025-07-25 16:18:54,581 INFO Update id=112783933 is handled. Duration 181 ms by bot id=8069233462
+2025-07-25 16:18:55,299 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 16:18:55,300 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 16:18:55,435 INFO Update id=112783934 is handled. Duration 140 ms by bot id=8069233462
+2025-07-25 16:20:05,454 INFO Update id=112783935 is handled. Duration 278 ms by bot id=8069233462
+2025-07-25 16:20:06,453 INFO Update id=112783936 is handled. Duration 239 ms by bot id=8069233462
+2025-07-25 16:20:07,039 INFO [update_user_to_match] Обновлен пользователь: evenolt
+2025-07-25 16:20:07,041 INFO [update_user_to_match] Всего пользователей: 2
+2025-07-25 16:20:07,359 INFO Update id=112783937 is handled. Duration 324 ms by bot id=8069233462

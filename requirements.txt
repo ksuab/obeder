@@ -14,3 +14,4 @@ multidict==6.0.4
 pytz==2023.3
 yarl==1.9.2
 typing-extensions==4.7.1
+filelock==3.13.1

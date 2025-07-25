@@ -3,11 +3,15 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 import logging
+import os
+from config import USERS_TO_MATCH_JSON, PLACES_CSV
+from aiogram.exceptions import TelegramBadRequest
 
 from .states import Form, MainMenu
 from .utils import (
     get_user_data, save_user_data, update_user_to_match, 
-    get_places_for_office, is_valid_time_interval, convert_to_match_format
+    get_places_for_office, is_valid_time_interval, convert_to_match_format,
+    run_matcher_and_get_result, read_notified_groups, write_notified_groups, is_user_notified, mark_user_notified
 )
 from .keyboards import (
     get_office_keyboard, get_time_start_keyboard, get_time_end_keyboard,
@@ -16,10 +20,68 @@ from .keyboards import (
     get_main_menu_keyboard, get_edit_menu_keyboard, get_lunch_preference_keyboard,
     get_back_to_menu_keyboard, get_lunch_favorite_places_keyboard, get_lunch_company_keyboard,
     get_lunch_confirm_keyboard, get_after_edit_keyboard,
-    get_lunch_time_start_keyboard, get_lunch_time_end_keyboard
+    get_lunch_time_start_keyboard, get_lunch_time_end_keyboard, get_duration_keyboard
 )
+from aiogram import Bot
 
 logger = logging.getLogger(__name__)
+
+# --- Переместить notify_all_new_groups выше ---
+async def notify_all_new_groups(bot: Bot, output_file: str):
+    import json
+    notified = read_notified_groups()
+    with open(output_file, 'r', encoding='utf-8') as f:
+        groups = json.load(f)
+    for group in groups:
+        group_key = f"{sorted(group['participants'])}_{group.get('lunch_time')}_{group.get('place')}"
+        for username in group['participants']:
+            if not is_user_notified(username, group_key):
+                # Отправить уведомление
+                # Найти user_id по username (по users_data.csv)
+                user_id = None
+                try:
+                    import csv
+                    with open('data/users_data.csv', 'r', encoding='utf-8') as csvfile:
+                        reader = csv.DictReader(csvfile)
+                        for row in reader:
+                            if row['username'] == username:
+                                user_id = int(row['user_id'])
+                                break
+                except Exception:
+                    pass
+                if user_id:
+                    if group["lunch_time"] and group["place"]:
+                        partners = [p for p in group["participants"] if p != username]
+                        partners_str = ", ".join(partners) if partners else "Вы обедаете в одиночку."
+                        lunch_time = f"{group['lunch_time'][0]}–{group['lunch_time'][1]}"
+                        place = group["place"]
+                        maps_link = group.get("maps_link", "")
+                        msg = (
+                            f"🍽 Ваш обед:\n"
+                            f"Время: {lunch_time}\n"
+                            f"Место: {place}\n"
+                            f"Ссылка: {maps_link}\n"
+                            f"Партнеры: {partners_str}"
+                        )
+                    else:
+                        msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+                    try:
+                        await bot.send_message(user_id, msg)
+                    except Exception as e:
+                        import logging
+                        logging.warning(f"Не удалось отправить уведомление {username} ({user_id}): {e}")
+                mark_user_notified(username, group_key)
+
+# Заменить все вызовы edit_text на безопасный вариант с обработкой TelegramBadRequest
+async def safe_edit_text(message, text, **kwargs):
+    try:
+        await message.edit_text(text, **kwargs)
+    except TelegramBadRequest as e:
+        if 'message is not modified' in str(e):
+            logging.info(f'[safe_edit_text] Попытка изменить сообщение на тот же текст: "{text[:40]}..."')
+        else:
+            logging.error(f'[safe_edit_text] TelegramBadRequest: {e}')
+            raise
 
 # Базовые функции
 async def show_main_menu(message, user_data=None):
@@ -28,7 +90,7 @@ async def show_main_menu(message, user_data=None):
     if isinstance(message, Message):
         await message.answer("Главное меню:", reply_markup=keyboard)
     else:
-        await message.edit_text("Главное меню:", reply_markup=keyboard)
+        await safe_edit_text(message, "Главное меню:", reply_markup=keyboard)
 
 async def start_profile_creation(message, state):
     await state.clear()
@@ -58,7 +120,7 @@ async def process_main_menu(callback_query: CallbackQuery, state: FSMContext):
     
     if action == "book_lunch":
         keyboard = get_lunch_preference_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Как вы хотите найти компанию на обед?",
             reply_markup=keyboard
         )
@@ -66,7 +128,7 @@ async def process_main_menu(callback_query: CallbackQuery, state: FSMContext):
     
     elif action == "edit_profile":
         keyboard = get_edit_menu_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите, какие настройки вы хотите изменить:",
             reply_markup=keyboard
         )
@@ -88,10 +150,10 @@ async def process_main_menu(callback_query: CallbackQuery, state: FSMContext):
             )
             
             keyboard = get_back_to_menu_keyboard()
-            await callback_query.message.edit_text(profile_text, reply_markup=keyboard)
+            await safe_edit_text(callback_query.message, profile_text, reply_markup=keyboard)
             await state.set_state(MainMenu.main)
         else:
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "У вас еще нет профиля. Давайте создадим его!",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="Создать профиль", callback_data="menu:create_profile")]
@@ -121,7 +183,7 @@ async def process_lunch_preference(callback_query: CallbackQuery, state: FSMCont
             match_params = convert_to_match_format(user_data, username)
             update_user_to_match(username, match_params)
             
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Отлично! Мы используем ваши настройки из профиля для подбора компании на обед сегодня.\n"
                 "Когда найдется подходящая компания, мы вас оповестим.",
                 reply_markup=get_back_to_menu_keyboard()
@@ -129,7 +191,7 @@ async def process_lunch_preference(callback_query: CallbackQuery, state: FSMCont
             
             await state.set_state(MainMenu.main)
         else:
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "У вас еще нет профиля. Давайте сначала заполним его.",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="Заполнить профиль", callback_data="menu:create_profile")]
@@ -141,16 +203,29 @@ async def process_lunch_preference(callback_query: CallbackQuery, state: FSMCont
         # Начинаем с выбора времени
         await state.update_data(custom_lunch_data={})
         
-        # Создаем клавиатуру для выбора времени начала
-        keyboard = get_lunch_time_start_keyboard()
-        
-        await callback_query.message.edit_text(
-            "Выберите начало временного слота для сегодняшнего обеда:",
+        # Сначала выбор офиса
+        keyboard = get_office_keyboard()
+        await safe_edit_text(callback_query.message,
+            "Выберите офис, из которого вы сегодня обедаете:",
             reply_markup=keyboard
         )
-        
-        await state.set_state(MainMenu.lunch_time_start)
+        await state.set_state(MainMenu.lunch_office)
     
+    await callback_query.answer()
+
+# --- ДОБАВИТЬ: обработчик выбора офиса для custom lunch ---
+async def process_lunch_office(callback_query: CallbackQuery, state: FSMContext):
+    office = callback_query.data.split(':', 1)[1]
+    custom_lunch_data = (await state.get_data()).get('custom_lunch_data', {})
+    custom_lunch_data['office'] = office
+    await state.update_data(custom_lunch_data=custom_lunch_data)
+    # Переход к выбору времени
+    keyboard = get_lunch_time_start_keyboard()
+    await safe_edit_text(callback_query.message,
+        f"Офис выбран: {office}\nТеперь выберите начало временного слота для сегодняшнего обеда:",
+        reply_markup=keyboard
+    )
+    await state.set_state(MainMenu.lunch_time_start)
     await callback_query.answer()
 
 # В custom lunch используем отдельные клавиатуры и callback_data
@@ -158,7 +233,7 @@ async def process_lunch_time_start(callback_query: CallbackQuery, state: FSMCont
     start_time = callback_query.data.split(':', 1)[1]
     await state.update_data(lunch_start_time=start_time)
     keyboard = get_lunch_time_end_keyboard(start_time)
-    await callback_query.message.edit_text(
+    await safe_edit_text(callback_query.message,
         f"Выбрано начало: {start_time}\n\nТеперь выберите конец временного слота:",
         reply_markup=keyboard
     )
@@ -176,14 +251,14 @@ async def process_lunch_time_end(callback_query: CallbackQuery, state: FSMContex
         custom_lunch_data['time_slots'] = time_slots
         await state.update_data(custom_lunch_data=custom_lunch_data)
         keyboard = get_add_slot_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             f"Добавлен слот: {start_time} - {end_time}\nХотите добавить еще один временной слот?",
             reply_markup=keyboard
         )
         await state.set_state(MainMenu.lunch_time_add_more)
     else:
         keyboard = get_lunch_time_start_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Ошибка: время окончания должно быть позже времени начала.\nПожалуйста, выберите начало временного слота:",
             reply_markup=keyboard
         )
@@ -194,7 +269,7 @@ async def process_lunch_time_add_more(callback_query: CallbackQuery, state: FSMC
     choice = callback_query.data.split(':')[1]
     if choice == "yes":
         keyboard = get_lunch_time_start_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите начало следующего временного слота:",
             reply_markup=keyboard
         )
@@ -202,7 +277,7 @@ async def process_lunch_time_add_more(callback_query: CallbackQuery, state: FSMC
     else:
         # После выбора всех временных слотов — выбор длительности обеда
         keyboard = get_lunch_duration_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите длительность обеда на сегодня:",
             reply_markup=keyboard
         )
@@ -216,13 +291,11 @@ async def process_lunch_custom_duration(callback_query: CallbackQuery, state: FS
     custom_lunch_data = data.get('custom_lunch_data', {})
     custom_lunch_data['max_lunch_duration'] = int(duration)
     await state.update_data(custom_lunch_data=custom_lunch_data)
-    user_id = callback_query.from_user.id
-    user_data = get_user_data(user_id)
-    office = user_data.get('office') if user_data else None
+    office = custom_lunch_data.get('office')
     places_for_office = get_places_for_office(office)
     fav_places = custom_lunch_data.get('favourite_places', [])
     keyboard = get_lunch_favorite_places_keyboard(places_for_office, fav_places)
-    await callback_query.message.edit_text(
+    await safe_edit_text(callback_query.message,
         "Выберите места, которые вам нравятся для обеда сегодня. Можно выбрать несколько. Когда закончите, нажмите 'Готово'.",
         reply_markup=keyboard
     )
@@ -237,7 +310,7 @@ async def process_lunch_place(callback_query: CallbackQuery, state: FSMContext):
     if place == "done":
         selected_sizes = custom_lunch_data.get('team_size_lst', [])
         keyboard = get_lunch_company_keyboard(selected_sizes)
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите предпочтительный размер компании для обеда сегодня:",
             reply_markup=keyboard
         )
@@ -254,7 +327,7 @@ async def process_lunch_place(callback_query: CallbackQuery, state: FSMContext):
         office = user_data.get('office') if user_data else None
         places_for_office = get_places_for_office(office)
         keyboard = get_lunch_favorite_places_keyboard(places_for_office, fav_places)
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите места, которые вам нравятся для обеда сегодня. Можно выбрать несколько. Когда закончите, нажмите 'Готово'.",
             reply_markup=keyboard
         )
@@ -288,7 +361,7 @@ async def process_lunch_company(callback_query: CallbackQuery, state: FSMContext
             f"- Размер компании: {', '.join(match_params.get('team_size_lst', ['Не выбран']))}"
         )
         keyboard = get_lunch_confirm_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             f"{summary}\n\nПодтвердите запись на обед с этими параметрами:",
             reply_markup=keyboard
         )
@@ -301,7 +374,7 @@ async def process_lunch_company(callback_query: CallbackQuery, state: FSMContext
         custom_lunch_data['team_size_lst'] = sizes
         await state.update_data(custom_lunch_data=custom_lunch_data)
         keyboard = get_lunch_company_keyboard(sizes)
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите предпочтительный размер компании для обеда сегодня:",
             reply_markup=keyboard
         )
@@ -309,11 +382,17 @@ async def process_lunch_company(callback_query: CallbackQuery, state: FSMContext
 
 # Обработчик подтверждения записи на обед
 async def process_lunch_confirmation(callback_query: CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    username = callback_query.from_user.username or f"user{user_id}"
+    logging.info(f'[DEBUG] process_lunch_confirmation start for {username}')
     choice = callback_query.data.split(':')[1]
+    logging.info(f'[DEBUG] process_lunch_confirmation: choice={choice} для {username}')
     
     if choice == "yes":
+        logging.info(f'[DEBUG] process_lunch_confirmation: внутри if choice==yes для {username}')
         # Получаем все необходимые данные
         data = await state.get_data()
+        logging.info(f'[DEBUG] process_lunch_confirmation: получил state.get_data для {username}')
         custom_lunch_data = data.get('custom_lunch_data', {})
         
         user_id = callback_query.from_user.id
@@ -337,20 +416,58 @@ async def process_lunch_confirmation(callback_query: CallbackQuery, state: FSMCo
             # Сохраняем данные для матчинга
             update_user_to_match(username, match_params)
             
-            await callback_query.message.edit_text(
+            # Запускаем matcher.py и отправляем результат пользователю
+            output_file = os.path.join("data", "output.json")
+            try:
+                logging.info(f'[DEBUG] about to call run_matcher_and_get_result for {username}')
+                group = run_matcher_and_get_result(
+                    username,
+                    USERS_TO_MATCH_JSON,
+                    PLACES_CSV,
+                    output_file
+                )
+                logging.info(f'[DEBUG] run_matcher_and_get_result успешно вызван для {username}')
+                if group:
+                    if group["lunch_time"] and group["place"]:
+                        partners = [p for p in group["participants"] if p != username]
+                        partners_str = ", ".join(partners) if partners else "Вы обедаете в одиночку."
+                        lunch_time = f"{group['lunch_time'][0]}–{group['lunch_time'][1]}"
+                        place = group["place"]
+                        maps_link = group.get("maps_link", "")
+                        msg = (
+                            f"🍽 Ваш обед:\n"
+                            f"Время: {lunch_time}\n"
+                            f"Место: {place}\n"
+                            f"Ссылка: {maps_link}\n"
+                            f"Партнеры: {partners_str}"
+                        )
+                    else:
+                        msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+                else:
+                    msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+                await callback_query.message.answer(msg)
+                logging.info(f'[DEBUG] сообщение пользователю отправлено для {username}')
+                await notify_all_new_groups(callback_query.bot, output_file)
+                logging.info(f'[DEBUG] notify_all_new_groups вызван для {username}')
+            except Exception as e:
+                logging.error(f'[DEBUG] Exception in process_lunch_confirmation for {username}: {e}')
+                await callback_query.message.answer(f"Ошибка при подборе компании для обеда: {e}")
+            
+            await safe_edit_text(callback_query.message,
                 "Вы успешно записаны на обед! Мы оповестим вас о найденной компании в ближайшее время.",
                 reply_markup=get_back_to_menu_keyboard()
             )
         else:
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Ошибка: не удалось найти ваш профиль. Пожалуйста, заполните анкету сначала.",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="Заполнить анкету", callback_data="menu:create_profile")]
                 ])
             )
     else:
+        logging.info(f'[DEBUG] process_lunch_confirmation: внутри else для {username}')
         # Отмена и возврат в главное меню
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Запись на обед отменена.",
             reply_markup=get_back_to_menu_keyboard()
         )
@@ -366,7 +483,7 @@ async def process_edit_field(callback_query: CallbackQuery, state: FSMContext):
         # Редактирование офиса
         keyboard = get_office_keyboard()
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите ваш офис:",
             reply_markup=keyboard
         )
@@ -381,7 +498,7 @@ async def process_edit_field(callback_query: CallbackQuery, state: FSMContext):
         # Создаем клавиатуру для выбора времени начала
         keyboard = get_time_start_keyboard()
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите начало временного слота для обеда:",
             reply_markup=keyboard
         )
@@ -392,7 +509,7 @@ async def process_edit_field(callback_query: CallbackQuery, state: FSMContext):
         # Редактирование длительности обеда
         keyboard = get_lunch_duration_keyboard()
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите предпочтительную длительность обеда:",
             reply_markup=keyboard
         )
@@ -411,14 +528,14 @@ async def process_edit_field(callback_query: CallbackQuery, state: FSMContext):
             
             keyboard = get_favorite_places_keyboard(places_for_office, favorite_places)
             
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Выберите места, которые вам нравятся:",
                 reply_markup=keyboard
             )
             
             await state.set_state(Form.favorite_places)
         else:
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Сначала выберите офис.",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="Выбрать офис", callback_data="edit:office")]
@@ -437,14 +554,14 @@ async def process_edit_field(callback_query: CallbackQuery, state: FSMContext):
             
             keyboard = get_disliked_places_keyboard(places_for_office, disliked_places)
             
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Выберите места, которые вам не нравятся:",
                 reply_markup=keyboard
             )
             
             await state.set_state(Form.disliked_places)
         else:
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Сначала выберите офис.",
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(text="Выбрать офис", callback_data="edit:office")]
@@ -459,7 +576,7 @@ async def process_edit_field(callback_query: CallbackQuery, state: FSMContext):
         
         keyboard = get_company_size_keyboard(company_size)
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите предпочтительный размер компании для обеда:",
             reply_markup=keyboard
         )
@@ -494,7 +611,7 @@ async def process_office(callback_query: CallbackQuery, state: FSMContext):
         # Создаем клавиатуру для выбора времени начала
         keyboard = get_time_start_keyboard()
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             f"Отлично! Вы выбрали офис: {office}\n\nТеперь выберите начало временного слота для обеда:",
             reply_markup=keyboard
         )
@@ -517,7 +634,7 @@ async def process_office(callback_query: CallbackQuery, state: FSMContext):
         # Показываем сообщение об успешном обновлении
         keyboard = get_after_edit_keyboard()
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             f"Офис успешно обновлен на: {office}",
             reply_markup=keyboard
         )
@@ -526,20 +643,19 @@ async def process_office(callback_query: CallbackQuery, state: FSMContext):
     
     await callback_query.answer()
 
-# Обработчик выбора времени начала слота
+# --- Исправить вызовы клавиатур для обычной анкеты ---
 async def process_time_start(callback_query: CallbackQuery, state: FSMContext):
     start_time = callback_query.data.split(':', 1)[1]
     logger.info(f"[DEBUG] Выбрано начало слота: {start_time}")
     await state.update_data(current_start_time=start_time)
     keyboard = get_time_end_keyboard(start_time)
-    await callback_query.message.edit_text(
+    await safe_edit_text(callback_query.message,
         f"Выбрано начало: {start_time}\n\nТеперь выберите конец временного слота:",
         reply_markup=keyboard
     )
     await state.set_state(Form.select_time_end)
     await callback_query.answer()
 
-# Обработчик выбора времени конца слота
 async def process_time_end(callback_query: CallbackQuery, state: FSMContext):
     end_time = callback_query.data.split(':', 1)[1]
     data = await state.get_data()
@@ -550,68 +666,51 @@ async def process_time_end(callback_query: CallbackQuery, state: FSMContext):
         time_slots.append([start_time, end_time])
         await state.update_data(time_slots=time_slots)
         keyboard = get_add_slot_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             f"Добавлен слот: {start_time} - {end_time}\nХотите добавить еще один временной слот?",
             reply_markup=keyboard
         )
         await state.set_state(Form.add_more_slots)
     else:
         keyboard = get_time_start_keyboard()
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Ошибка: время окончания должно быть позже времени начала.\nПожалуйста, выберите начало временного слота:",
             reply_markup=keyboard
         )
         await state.set_state(Form.select_time_start)
     await callback_query.answer()
 
-# Обработчик выбора добавления дополнительного слота
 async def process_add_more_slots(callback_query: CallbackQuery, state: FSMContext):
     choice = callback_query.data.split(':')[1]
-    
     if choice == "yes":
-        # Создаем клавиатуру для выбора времени начала нового слота
         keyboard = get_time_start_keyboard()
-        
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Выберите начало нового временного слота:",
             reply_markup=keyboard
         )
-        
         await state.set_state(Form.select_time_start)
     else:
-        # Проверяем, это новый профиль или редактирование
         user_id = callback_query.from_user.id
         user_data = get_user_data(user_id)
-        
         if user_data:
-            # Это редактирование - сохраняем новые слоты и возвращаемся в меню редактирования
             data = await state.get_data()
             time_slots = data.get('time_slots', [])
-            
             user_data['time_slots'] = time_slots
             username = callback_query.from_user.username or f"user{user_id}"
-            
             save_user_data(user_id, username, user_data)
-            
             keyboard = get_after_edit_keyboard()
-            
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Временные слоты успешно обновлены.",
                 reply_markup=keyboard
             )
-            
             await state.set_state(MainMenu.main)
         else:
-            # Это новый профиль - продолжаем заполнение
-            # Создаем клавиатуру для выбора длительности обеда
-            keyboard = get_lunch_duration_keyboard()
-            
-            await callback_query.message.edit_text(
+            keyboard = get_duration_keyboard()
+            await safe_edit_text(callback_query.message,
                 "Понял. Какую длительность обеда вы предпочитаете?",
                 reply_markup=keyboard
             )
             await state.set_state(Form.lunch_duration)
-    
     await callback_query.answer()
 
 # Обработчик выбора длительности обеда
@@ -629,16 +728,45 @@ async def process_lunch_duration(callback_query: CallbackQuery, state: FSMContex
         # Это редактирование - сохраняем новую длительность и возвращаемся в меню редактирования
         user_data['lunch_duration'] = duration
         username = callback_query.from_user.username or f"user{user_id}"
-        
         save_user_data(user_id, username, user_data)
-        
+        # --- Запуск matcher.py и рассылка результата ---
+        from config import USERS_TO_MATCH_JSON, PLACES_CSV
+        import os
+        output_file = os.path.join("data", "output.json")
+        from .utils import run_matcher_and_get_result
+        match_params = convert_to_match_format(user_data, username)
+        update_user_to_match(username, match_params)
+        try:
+            group = run_matcher_and_get_result(
+                username,
+                USERS_TO_MATCH_JSON,
+                PLACES_CSV,
+                output_file
+            )
+            if group and group["lunch_time"] and group["place"]:
+                partners = [p for p in group["participants"] if p != username]
+                partners_str = ", ".join(partners) if partners else "Вы обедаете в одиночку."
+                lunch_time = f"{group['lunch_time'][0]}–{group['lunch_time'][1]}"
+                place = group["place"]
+                maps_link = group.get("maps_link", "")
+                msg = (
+                    f"🍽 Ваш обед:\n"
+                    f"Время: {lunch_time}\n"
+                    f"Место: {place}\n"
+                    f"Ссылка: {maps_link}\n"
+                    f"Партнеры: {partners_str}"
+                )
+            else:
+                msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+            await callback_query.message.answer(msg)
+            await notify_all_new_groups(callback_query.bot, output_file)
+        except Exception as e:
+            await callback_query.message.answer(f"Ошибка при подборе компании для обеда: {e}")
         keyboard = get_after_edit_keyboard()
-        
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             f"Длительность обеда успешно обновлена на: {duration} минут",
             reply_markup=keyboard
         )
-        
         await state.set_state(MainMenu.main)
     else:
         # Это новый профиль - продолжаем заполнение
@@ -653,7 +781,7 @@ async def process_lunch_duration(callback_query: CallbackQuery, state: FSMContex
         # Создаем клавиатуру для выбора любимых мест
         keyboard = get_favorite_places_keyboard(places_for_office, favorite_places)
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Теперь выберите места, которые вам нравятся. Можно выбрать несколько. Когда закончите, нажмите 'Готово'.",
             reply_markup=keyboard
         )
@@ -675,21 +803,52 @@ async def process_favorite_places(callback_query: CallbackQuery, state: FSMConte
         # Проверяем, это новый профиль или редактирование
         user_id = callback_query.from_user.id
         user_data = get_user_data(user_id)
-        
-        if user_data and 'time_slots' not in data:
+        import logging
+        logging.info(f'[DEBUG] user_id={user_id}, user_data={user_data} в process_favorite_places')
+        if user_data:
+            logging.info(f'[DEBUG] Ветка редактирования профиля для {username} в process_favorite_places')
             # Это редактирование - сохраняем новые любимые места и возвращаемся в меню редактирования
             user_data['favorite_places'] = favorite_places
             username = callback_query.from_user.username or f"user{user_id}"
-            
             save_user_data(user_id, username, user_data)
-            
+            # --- Запуск matcher.py и рассылка результата ---
+            from config import USERS_TO_MATCH_JSON, PLACES_CSV
+            import os
+            output_file = os.path.join("data", "output.json")
+            from .utils import run_matcher_and_get_result
+            match_params = convert_to_match_format(user_data, username)
+            update_user_to_match(username, match_params)
+            try:
+                group = run_matcher_and_get_result(
+                    username,
+                    USERS_TO_MATCH_JSON,
+                    PLACES_CSV,
+                    output_file
+                )
+                if group and group["lunch_time"] and group["place"]:
+                    partners = [p for p in group["participants"] if p != username]
+                    partners_str = ", ".join(partners) if partners else "Вы обедаете в одиночку."
+                    lunch_time = f"{group['lunch_time'][0]}–{group['lunch_time'][1]}"
+                    place = group["place"]
+                    maps_link = group.get("maps_link", "")
+                    msg = (
+                        f"🍽 Ваш обед:\n"
+                        f"Время: {lunch_time}\n"
+                        f"Место: {place}\n"
+                        f"Ссылка: {maps_link}\n"
+                        f"Партнеры: {partners_str}"
+                    )
+                else:
+                    msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+                await callback_query.message.answer(msg)
+                await notify_all_new_groups(callback_query.bot, output_file)
+            except Exception as e:
+                await callback_query.message.answer(f"Ошибка при подборе компании для обеда: {e}")
             keyboard = get_after_edit_keyboard()
-            
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Любимые места успешно обновлены.",
                 reply_markup=keyboard
             )
-            
             await state.set_state(MainMenu.main)
         else:
             # Это новый профиль или полное редактирование - продолжаем
@@ -700,7 +859,7 @@ async def process_favorite_places(callback_query: CallbackQuery, state: FSMConte
             # Создаем клавиатуру для выбора нелюбимых мест
             keyboard = get_disliked_places_keyboard(places_for_office, disliked_places)
             
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "А теперь выберите места, которые вам не нравятся (чтобы мы их избегали):",
                 reply_markup=keyboard
             )
@@ -719,7 +878,7 @@ async def process_favorite_places(callback_query: CallbackQuery, state: FSMConte
         places_for_office = get_places_for_office(office)
         keyboard = get_favorite_places_keyboard(places_for_office, favorite_places)
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Теперь выберите места, которые вам нравятся. Можно выбрать несколько. Когда закончите, нажмите 'Готово'.",
             reply_markup=keyboard
         )
@@ -739,21 +898,54 @@ async def process_disliked_places(callback_query: CallbackQuery, state: FSMConte
         # Проверяем, это новый профиль или редактирование
         user_id = callback_query.from_user.id
         user_data = get_user_data(user_id)
-        
-        if user_data and 'time_slots' not in data:
+        import logging
+        logging.info(f'[DEBUG] user_id={user_id}, user_data={user_data} в process_disliked_places')
+        if user_data:
+            logging.info(f'[DEBUG] Ветка редактирования профиля для {username} в process_disliked_places')
             # Это редактирование - сохраняем новые нелюбимые места и возвращаемся в меню редактирования
             user_data['disliked_places'] = disliked_places
             username = callback_query.from_user.username or f"user{user_id}"
             
             save_user_data(user_id, username, user_data)
             
+            # --- Запуск matcher.py и рассылка результата ---
+            from config import USERS_TO_MATCH_JSON, PLACES_CSV
+            import os
+            output_file = os.path.join("data", "output.json")
+            from .utils import run_matcher_and_get_result
+            match_params = convert_to_match_format(user_data, username)
+            update_user_to_match(username, match_params)
+            try:
+                group = run_matcher_and_get_result(
+                    username,
+                    USERS_TO_MATCH_JSON,
+                    PLACES_CSV,
+                    output_file
+                )
+                if group and group["lunch_time"] and group["place"]:
+                    partners = [p for p in group["participants"] if p != username]
+                    partners_str = ", ".join(partners) if partners else "Вы обедаете в одиночку."
+                    lunch_time = f"{group['lunch_time'][0]}–{group['lunch_time'][1]}"
+                    place = group["place"]
+                    maps_link = group.get("maps_link", "")
+                    msg = (
+                        f"🍽 Ваш обед:\n"
+                        f"Время: {lunch_time}\n"
+                        f"Место: {place}\n"
+                        f"Ссылка: {maps_link}\n"
+                        f"Партнеры: {partners_str}"
+                    )
+                else:
+                    msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+                await callback_query.message.answer(msg)
+                await notify_all_new_groups(callback_query.bot, output_file)
+            except Exception as e:
+                await callback_query.message.answer(f"Ошибка при подборе компании для обеда: {e}")
             keyboard = get_after_edit_keyboard()
-            
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Нелюбимые места успешно обновлены.",
                 reply_markup=keyboard
             )
-            
             await state.set_state(MainMenu.main)
         else:
             # Это новый профиль или полное редактирование - продолжаем
@@ -761,7 +953,7 @@ async def process_disliked_places(callback_query: CallbackQuery, state: FSMConte
             company_size = data.get('company_size', [])
             keyboard = get_company_size_keyboard(company_size)
             
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Почти готово! Укажите предпочитаемый размер компании для обеда (можно выбрать несколько):",
                 reply_markup=keyboard
             )
@@ -780,7 +972,7 @@ async def process_disliked_places(callback_query: CallbackQuery, state: FSMConte
         places_for_office = get_places_for_office(office)
         keyboard = get_disliked_places_keyboard(places_for_office, disliked_places)
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "А теперь выберите места, которые вам не нравятся (чтобы мы их избегали):",
             reply_markup=keyboard
         )
@@ -799,21 +991,54 @@ async def process_company_size(callback_query: CallbackQuery, state: FSMContext)
         # Проверяем, это новый профиль или редактирование
         user_id = callback_query.from_user.id
         user_data = get_user_data(user_id)
-        
-        if user_data and 'time_slots' not in data:
+        import logging
+        logging.info(f'[DEBUG] user_id={user_id}, user_data={user_data} в process_company_size')
+        if user_data:
+            logging.info(f'[DEBUG] Ветка редактирования профиля для {username} в process_company_size')
             # Это редактирование - сохраняем новый размер компании и возвращаемся в меню редактирования
             user_data['company_size'] = company_size
             username = callback_query.from_user.username or f"user{user_id}"
             
             save_user_data(user_id, username, user_data)
             
+            # --- Запуск matcher.py и рассылка результата ---
+            from config import USERS_TO_MATCH_JSON, PLACES_CSV
+            import os
+            output_file = os.path.join("data", "output.json")
+            from .utils import run_matcher_and_get_result
+            match_params = convert_to_match_format(user_data, username)
+            update_user_to_match(username, match_params)
+            try:
+                group = run_matcher_and_get_result(
+                    username,
+                    USERS_TO_MATCH_JSON,
+                    PLACES_CSV,
+                    output_file
+                )
+                if group and group["lunch_time"] and group["place"]:
+                    partners = [p for p in group["participants"] if p != username]
+                    partners_str = ", ".join(partners) if partners else "Вы обедаете в одиночку."
+                    lunch_time = f"{group['lunch_time'][0]}–{group['lunch_time'][1]}"
+                    place = group["place"]
+                    maps_link = group.get("maps_link", "")
+                    msg = (
+                        f"🍽 Ваш обед:\n"
+                        f"Время: {lunch_time}\n"
+                        f"Место: {place}\n"
+                        f"Ссылка: {maps_link}\n"
+                        f"Партнеры: {partners_str}"
+                    )
+                else:
+                    msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+                await callback_query.message.answer(msg)
+                await notify_all_new_groups(callback_query.bot, output_file)
+            except Exception as e:
+                await callback_query.message.answer(f"Ошибка при подборе компании для обеда: {e}")
             keyboard = get_after_edit_keyboard()
-            
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 "Размер компании успешно обновлен.",
                 reply_markup=keyboard
             )
-            
             await state.set_state(MainMenu.main)
         else:
             # Это новый профиль или полное редактирование - формируем сводку и переходим к подтверждению
@@ -832,7 +1057,7 @@ async def process_company_size(callback_query: CallbackQuery, state: FSMContext)
             # Создаем клавиатуру для подтверждения
             keyboard = get_confirmation_keyboard()
             
-            await callback_query.message.edit_text(
+            await safe_edit_text(callback_query.message,
                 summary,
                 reply_markup=keyboard
             )
@@ -850,7 +1075,7 @@ async def process_company_size(callback_query: CallbackQuery, state: FSMContext)
         # Обновляем клавиатуру
         keyboard = get_company_size_keyboard(company_size)
         
-        await callback_query.message.edit_text(
+        await safe_edit_text(callback_query.message,
             "Почти готово! Укажите предпочитаемый размер компании для обеда (можно выбрать несколько):",
             reply_markup=keyboard
         )
@@ -859,57 +1084,182 @@ async def process_company_size(callback_query: CallbackQuery, state: FSMContext)
 
 # Обработчик подтверждения анкеты
 async def process_confirmation(callback_query: CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    username = callback_query.from_user.username or f"user{user_id}"
+    logging.info(f'[DEBUG] process_confirmation start for {username}')
     choice = callback_query.data.split(':')[1]
-    
+    logging.info(f'[DEBUG] process_confirmation: choice={choice} для {username}')
     if choice == "yes":
-        # Сохраняем данные пользователя в CSV
-        user_id = callback_query.from_user.id
-        username = callback_query.from_user.username or f"user{user_id}"
+        logging.info(f'[DEBUG] process_confirmation: внутри if choice==yes для {username}')
         data = await state.get_data()
-        
-        # Проверка, что все необходимые ключи существуют
+        logging.info(f'[DEBUG] process_confirmation: получил state.get_data для {username}')
         if not data.get('favorite_places'):
             data['favorite_places'] = []
         if not data.get('disliked_places'):
             data['disliked_places'] = []
         if not data.get('company_size'):
             data['company_size'] = []
-        
         save_user_data(user_id, username, data)
-        
-        # Сохраняем также данные для матчинга
+        logging.info(f'[DEBUG] после save_user_data для {username}')
         match_params = convert_to_match_format(data, username)
         update_user_to_match(username, match_params)
-        
-        # Показываем главное меню
-        await callback_query.message.edit_text(
-            "Спасибо! Ваша анкета сохранена. Теперь вы можете записаться на обед или изменить настройки."
-        )
-        
+        logging.info(f'[DEBUG] после update_user_to_match для {username}')
+        output_file = os.path.join("data", "output.json")
+        try:
+            logging.info(f'[DEBUG] about to call run_matcher_and_get_result for {username}')
+            group = run_matcher_and_get_result(
+                username,
+                USERS_TO_MATCH_JSON,
+                PLACES_CSV,
+                output_file
+            )
+            logging.info(f'[DEBUG] run_matcher_and_get_result успешно вызван для {username}')
+            if group:
+                if group["lunch_time"] and group["place"]:
+                    partners = [p for p in group["participants"] if p != username]
+                    partners_str = ", ".join(partners) if partners else "Вы обедаете в одиночку."
+                    lunch_time = f"{group['lunch_time'][0]}–{group['lunch_time'][1]}"
+                    place = group["place"]
+                    maps_link = group.get("maps_link", "")
+                    msg = (
+                        f"🍽 Ваш обед:\n"
+                        f"Время: {lunch_time}\n"
+                        f"Место: {place}\n"
+                        f"Ссылка: {maps_link}\n"
+                        f"Партнеры: {partners_str}"
+                    )
+                else:
+                    msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+            else:
+                msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+            await callback_query.message.answer(msg)
+            logging.info(f'[DEBUG] сообщение пользователю отправлено для {username}')
+            await notify_all_new_groups(callback_query.bot, output_file)
+            logging.info(f'[DEBUG] notify_all_new_groups вызван для {username}')
+        except Exception as e:
+            logging.error(f'[DEBUG] Exception in process_confirmation for {username}: {e}')
+            await callback_query.message.answer(f"Ошибка при подборе компании для обеда: {e}")
+        await safe_edit_text(callback_query.message,
+            "Спасибо! Ваша анкета сохранена. Теперь вы можете записаться на обед или изменить настройки.")
         await show_main_menu(callback_query.message, data)
-        
-        # Очищаем состояние пользователя и переходим в главное меню
         await state.clear()
         await state.set_state(MainMenu.main)
     else:
-        # Начинаем заполнение анкеты заново
-        await callback_query.message.edit_text(
-            "Хорошо, давайте заполним анкету заново."
-        )
-        
-        # Очищаем состояние и возвращаемся к началу
+        logging.info(f'[DEBUG] process_confirmation: внутри else для {username}')
+        await safe_edit_text(callback_query.message,
+            "Хорошо, давайте заполним анкету заново.")
         await state.clear()
-        
-        # Создаем инлайн-клавиатуру для выбора офиса
         keyboard = get_office_keyboard()
-        
         await callback_query.message.answer(
             "Для начала, выберите ваш офис:",
             reply_markup=keyboard
         )
-        
         await state.set_state(Form.office)
-    
+    await callback_query.answer()
+
+# Обработчик кнопки "Назад" на этапах анкетирования
+async def process_back_in_form(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    current_state = await state.get_state()
+    # Определяем куда возвращаться
+    if current_state == Form.select_time_start.state:
+        # Назад к выбору офиса
+        keyboard = get_office_keyboard()
+        await safe_edit_text(callback_query.message, "Выберите ваш офис:", reply_markup=keyboard)
+        await state.set_state(Form.office)
+    elif current_state == Form.select_time_end.state:
+        # Назад к выбору начала слота
+        keyboard = get_time_start_keyboard()
+        await safe_edit_text(callback_query.message, "Выберите начало временного слота:", reply_markup=keyboard)
+        await state.set_state(Form.select_time_start)
+    elif current_state == Form.add_more_slots.state:
+        # Назад к выбору конца слота
+        last_slot = data.get('time_slots', [])[-1][0] if data.get('time_slots') else None
+        keyboard = get_time_end_keyboard(last_slot) if last_slot else get_time_end_keyboard('11:00')
+        await safe_edit_text(callback_query.message, "Выберите время окончания слота:", reply_markup=keyboard)
+        await state.set_state(Form.select_time_end)
+    elif current_state == Form.lunch_duration.state:
+        # Назад к добавлению еще одного слота
+        keyboard = get_add_slot_keyboard()
+        await safe_edit_text(callback_query.message, "Добавить еще один временной слот?", reply_markup=keyboard)
+        await state.set_state(Form.add_more_slots)
+    elif current_state == Form.favorite_places.state:
+        # Назад к выбору нелюбимых мест
+        office = data.get('office')
+        places_for_office = get_places_for_office(office)
+        disliked_places = data.get('disliked_places', [])
+        keyboard = get_disliked_places_keyboard(places_for_office, disliked_places)
+        await safe_edit_text(callback_query.message, "Выберите нелюбимые места:", reply_markup=keyboard)
+        await state.set_state(Form.disliked_places)
+    elif current_state == Form.company_size.state:
+        # Назад к выбору размера компании
+        company_size = data.get('company_size', [])
+        keyboard = get_company_size_keyboard(company_size)
+        await safe_edit_text(callback_query.message, "Выберите предпочитаемый размер компании:", reply_markup=keyboard)
+        await state.set_state(Form.company_size)
+    elif current_state == Form.confirmation.state:
+        # Назад к выбору размера компании
+        company_size = data.get('company_size', [])
+        keyboard = get_company_size_keyboard(company_size)
+        await safe_edit_text(callback_query.message, "Выберите предпочитаемый размер компании:", reply_markup=keyboard)
+        await state.set_state(Form.company_size)
+    else:
+        await callback_query.message.answer("Возврат невозможен на этом этапе.")
+    await callback_query.answer()
+
+# Обработчик кнопки "Назад" для custom lunch
+async def process_back_in_custom_lunch(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    current_state = await state.get_state()
+    custom_lunch_data = data.get('custom_lunch_data', {})
+    if current_state == MainMenu.lunch_office.state:
+        # Назад к меню выбора типа записи
+        keyboard = get_lunch_preference_keyboard()
+        await safe_edit_text(callback_query.message, "Выберите способ записи на обед:", reply_markup=keyboard)
+        await state.set_state(MainMenu.lunch_preference)
+    elif current_state == MainMenu.lunch_time_start.state:
+        # Назад к выбору офиса
+        keyboard = get_office_keyboard()
+        await safe_edit_text(callback_query.message, "Выберите офис:", reply_markup=keyboard)
+        await state.set_state(MainMenu.lunch_office)
+    elif current_state == MainMenu.lunch_time_end.state:
+        # Назад к выбору времени начала
+        keyboard = get_lunch_time_start_keyboard()
+        await safe_edit_text(callback_query.message, "Выберите начало временного слота:", reply_markup=keyboard)
+        await state.set_state(MainMenu.lunch_time_start)
+    elif current_state == MainMenu.lunch_time_add_more.state:
+        # Назад к выбору времени конца
+        last_slot = custom_lunch_data.get('time_slots', [])[-1][0] if custom_lunch_data.get('time_slots') else None
+        keyboard = get_lunch_time_end_keyboard(last_slot) if last_slot else get_lunch_time_end_keyboard('11:00')
+        await safe_edit_text(callback_query.message, "Выберите время окончания слота:", reply_markup=keyboard)
+        await state.set_state(MainMenu.lunch_time_end)
+    elif current_state == MainMenu.lunch_duration.state:
+        # Назад к добавлению еще одного слота
+        keyboard = get_lunch_duration_keyboard()
+        await safe_edit_text(callback_query.message, "Выберите длительность обеда:", reply_markup=keyboard)
+        await state.set_state(MainMenu.lunch_duration)
+    elif current_state == MainMenu.lunch_place.state:
+        # Назад к выбору любимых мест
+        office = custom_lunch_data.get('office')
+        places_for_office = get_places_for_office(office)
+        fav_places = custom_lunch_data.get('favourite_places', [])
+        keyboard = get_lunch_favorite_places_keyboard(places_for_office, fav_places)
+        await safe_edit_text(callback_query.message, "Выберите любимые места:", reply_markup=keyboard)
+        await state.set_state(MainMenu.lunch_place)
+    elif current_state == MainMenu.lunch_company_size.state:
+        # Назад к выбору размера компании
+        sizes = custom_lunch_data.get('team_size_lst', [])
+        keyboard = get_lunch_company_keyboard(sizes)
+        await safe_edit_text(callback_query.message, "Выберите предпочитаемый размер компании:", reply_markup=keyboard)
+        await state.set_state(MainMenu.lunch_company_size)
+    elif current_state == MainMenu.lunch_confirmation.state:
+        # Назад к выбору размера компании
+        sizes = custom_lunch_data.get('team_size_lst', [])
+        keyboard = get_lunch_company_keyboard(sizes)
+        await safe_edit_text(callback_query.message, "Выберите предпочитаемый размер компании:", reply_markup=keyboard)
+        await state.set_state(MainMenu.lunch_company_size)
+    else:
+        await callback_query.message.answer("Возврат невозможен на этом этапе.")
     await callback_query.answer()
 
 # Регистрация всех обработчиков
@@ -930,9 +1280,11 @@ def register_all_handlers(dp):
     dp.callback_query.register(process_disliked_places, F.data.startswith("dis_place:"), Form.disliked_places)
     dp.callback_query.register(process_company_size, F.data.startswith("size:"), Form.company_size)
     dp.callback_query.register(process_confirmation, F.data.startswith("confirm:"), Form.confirmation)
+    dp.callback_query.register(process_back_in_form, F.data.startswith("back:"), Form.select_time_start, Form.select_time_end, Form.add_more_slots, Form.lunch_duration, Form.favorite_places, Form.disliked_places, Form.company_size, Form.confirmation)
     
     # Регистрация обработчиков для записи на обед
     dp.callback_query.register(process_lunch_preference, F.data.startswith("lunch:"), MainMenu.lunch_preference)
+    dp.callback_query.register(process_lunch_office, F.data.startswith("office:"), MainMenu.lunch_office)
     dp.callback_query.register(process_lunch_time_start, F.data.startswith("lunch_time_start:"), MainMenu.lunch_time_start)
     dp.callback_query.register(process_lunch_time_end, F.data.startswith("lunch_time_end:"), MainMenu.lunch_time_end)
     dp.callback_query.register(process_lunch_time_add_more, F.data.startswith("add_slot:"), MainMenu.lunch_time_add_more)
@@ -940,6 +1292,7 @@ def register_all_handlers(dp):
     dp.callback_query.register(process_lunch_place, F.data.startswith("lunch_place:"), MainMenu.lunch_place)
     dp.callback_query.register(process_lunch_company, F.data.startswith("lunch_company:"), MainMenu.lunch_company_size)
     dp.callback_query.register(process_lunch_confirmation, F.data.startswith("lunch_confirm:"), MainMenu.lunch_confirmation)
+    dp.callback_query.register(process_back_in_custom_lunch, F.data.startswith("back:"), MainMenu.lunch_office, MainMenu.lunch_time_start, MainMenu.lunch_time_end, MainMenu.lunch_time_add_more, MainMenu.lunch_duration, MainMenu.lunch_place, MainMenu.lunch_company_size, MainMenu.lunch_confirmation)
     
     # Регистрация обработчиков для редактирования профиля
     dp.callback_query.register(process_edit_field, F.data.startswith("edit:"), MainMenu.edit_field)

@@ -16,6 +16,7 @@ class Form(StatesGroup):
 class MainMenu(StatesGroup):
     main = State()
     lunch_preference = State()
+    lunch_office = State()
     lunch_time_start = State()
     lunch_time_end = State()
     lunch_time_add_more = State()

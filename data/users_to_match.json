@@ -5,20 +5,44 @@
       "office": "Аврора",
       "time_slots": [
         [
-          "12:30",
-          "14:00"
+          "13:00",
+          "15:30"
         ]
       ],
       "max_lunch_duration": 45,
       "favourite_places": [
-        "Coffee House"
+        "Snedi",
+        "Mama",
+        "Restaurant Elite"
       ],
       "non_desirable_places": [
         "Burger King",
         "Quick Bite"
       ],
       "team_size_lst": [
-        "3-5"
+        "18+"
+      ]
+    }
+  },
+  {
+    "login": "agmikheeva",
+    "parameters": {
+      "office": "Аврора",
+      "time_slots": [
+        [
+          "12:00",
+          "16:00"
+        ]
+      ],
+      "max_lunch_duration": 60,
+      "favourite_places": [
+        "Mama"
+      ],
+      "non_desirable_places": [
+        "Snedi"
+      ],
+      "team_size_lst": [
+        "2"
       ]
     }
   }

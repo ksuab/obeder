@@ -4,6 +4,8 @@ import re
 import json
 from datetime import datetime, time
 import logging
+import subprocess
+from filelock import FileLock
 
 from config import USERS_CSV, PLACES_CSV, USERS_TO_MATCH_JSON
 
@@ -63,42 +65,35 @@ def ensure_json_exists():
 # Сохранение данных пользователя
 def save_user_data(user_id, username, data):
     ensure_csv_exists()
-    
-    # Преобразование данных в строки для CSV
     time_slots_str = ';'.join([f"{start}-{end}" for start, end in data['time_slots']])
     favorite_places_str = ';'.join(data['favorite_places'])
     disliked_places_str = ';'.join(data['disliked_places'])
     company_size_str = ';'.join(data['company_size'])
-    
-    # Чтение существующих данных
-    rows = []
-    user_exists = False
-    if os.path.exists(USERS_CSV):
-        with open(USERS_CSV, 'r', newline='', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            header = next(reader)  # Сохраняем заголовок
-            for row in reader:
-                if row and row[0] == str(user_id):
-                    # Обновляем существующую запись
-                    row = [str(user_id), username, data['office'], time_slots_str, data['lunch_duration'],
-                          favorite_places_str, disliked_places_str, company_size_str,
-                          datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")]
-                    user_exists = True
-                rows.append(row)
-    
-    # Если пользователь новый, добавляем его
-    if not user_exists:
-        new_row = [str(user_id), username, data['office'], time_slots_str, data['lunch_duration'],
-                  favorite_places_str, disliked_places_str, company_size_str,
-                  datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")]
-        rows.append(new_row)
-    
-    # Записываем все данные обратно в файл
-    with open(USERS_CSV, 'w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow(['user_id', 'username', 'office', 'time_slots', 'lunch_duration', 
-                        'favorite_places', 'disliked_places', 'company_size', 'last_updated'])
-        writer.writerows(rows)
+    lock_path = USERS_CSV + '.lock'
+    with FileLock(lock_path, timeout=10):
+        rows = []
+        user_exists = False
+        if os.path.exists(USERS_CSV):
+            with open(USERS_CSV, 'r', newline='', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                header = next(reader)
+                for row in reader:
+                    if row and row[0] == str(user_id):
+                        row = [str(user_id), username, data['office'], time_slots_str, data['lunch_duration'],
+                              favorite_places_str, disliked_places_str, company_size_str,
+                              datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")]
+                        user_exists = True
+                    rows.append(row)
+        if not user_exists:
+            new_row = [str(user_id), username, data['office'], time_slots_str, data['lunch_duration'],
+                      favorite_places_str, disliked_places_str, company_size_str,
+                      datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")]
+            rows.append(new_row)
+        with open(USERS_CSV, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(['user_id', 'username', 'office', 'time_slots', 'lunch_duration', 
+                            'favorite_places', 'disliked_places', 'company_size', 'last_updated'])
+            writer.writerows(rows)
 
 # Получение данных пользователя
 def get_user_data(user_id):
@@ -129,37 +124,37 @@ def get_user_data(user_id):
     return None
 
 # Обновление данных пользователя для матчинга
+
 def update_user_to_match(username, parameters):
     ensure_json_exists()
-    
-    users = []
-    user_exists = False
-    
-    # Читаем существующие данные
-    if os.path.exists(USERS_TO_MATCH_JSON):
-        with open(USERS_TO_MATCH_JSON, 'r', encoding='utf-8') as file:
-            try:
-                users = json.load(file)
-            except json.JSONDecodeError:
-                users = []
-    
-    # Ищем пользователя и обновляем его данные
-    for user in users:
-        if user.get('login') == username:
-            user['parameters'] = parameters
-            user_exists = True
-            break
-    
-    # Если пользователя нет, добавляем его
-    if not user_exists:
-        users.append({
-            "login": username,
-            "parameters": parameters
-        })
-    
-    # Записываем обновленные данные
-    with open(USERS_TO_MATCH_JSON, 'w', encoding='utf-8') as file:
-        json.dump(users, file, ensure_ascii=False, indent=2)
+    lock_path = USERS_TO_MATCH_JSON + '.lock'
+    import logging
+    with FileLock(lock_path, timeout=10):
+        users = []
+        user_exists = False
+        if os.path.exists(USERS_TO_MATCH_JSON):
+            with open(USERS_TO_MATCH_JSON, 'r', encoding='utf-8') as file:
+                try:
+                    users = json.load(file)
+                except json.JSONDecodeError:
+                    users = []
+        # Проверяем, есть ли уже такой пользователь
+        for user in users:
+            if user.get('login') == username:
+                user['parameters'] = parameters
+                user_exists = True
+                logging.info(f"[update_user_to_match] Обновлен пользователь: {username}")
+                break
+        if not user_exists:
+            users.append({
+                "login": username,
+                "parameters": parameters
+            })
+            logging.info(f"[update_user_to_match] Добавлен новый пользователь: {username}")
+        # Сохраняем всех пользователей обратно
+        with open(USERS_TO_MATCH_JSON, 'w', encoding='utf-8') as file:
+            json.dump(users, file, ensure_ascii=False, indent=2)
+        logging.info(f"[update_user_to_match] Всего пользователей: {len(users)}")
 
 # Получение списка мест для офиса
 def get_places_for_office(office):
@@ -190,3 +185,62 @@ def convert_to_match_format(data, username):
         "non_desirable_places": data.get('disliked_places', []),
         "team_size_lst": data.get('company_size', [])
     }
+
+# Запуск matcher.py и получение результата для пользователя
+
+def run_matcher_and_get_result(user_login, users_file, places_file, output_file):
+    import logging
+    import os
+    log_path = 'logs/bot.log'
+    matcher_path = os.path.abspath('matcher.py')
+    logging.info(f"[DEBUG] run_matcher_and_get_result вызван для {user_login}, matcher_path={matcher_path}")
+    with open(log_path, 'a', encoding='utf-8') as log_file:
+        log_file.write(f"\n[run_matcher_and_get_result] Запуск matcher.py для {user_login} (matcher_path={matcher_path})\n")
+        try:
+            result = subprocess.run([
+                "python3", matcher_path,
+                "-i", users_file,
+                "-p", places_file,
+                "-o", output_file
+            ], check=True, capture_output=True, text=True)
+            log_file.write(f"[matcher.py stdout]\n{result.stdout}\n")
+            log_file.write(f"[matcher.py stderr]\n{result.stderr}\n")
+            logging.info(f"[DEBUG] matcher.py успешно завершён для {user_login}")
+        except subprocess.CalledProcessError as e:
+            log_file.write(f"[matcher.py ERROR] {e}\n[stdout]\n{e.stdout}\n[stderr]\n{e.stderr}\n")
+            logging.error(f"[DEBUG] matcher.py завершился с ошибкой для {user_login}: {e}")
+            raise
+        except Exception as e:
+            log_file.write(f"[matcher.py UNEXPECTED ERROR] {e}\n")
+            logging.error(f"[DEBUG] matcher.py неожиданная ошибка для {user_login}: {e}")
+            raise
+    with open(output_file, "r", encoding="utf-8") as f:
+        results = json.load(f)
+    for group in results:
+        if user_login in group["participants"]:
+            return group
+    return None
+
+NOTIFIED_GROUPS_JSON = os.path.join('data', 'notified_groups.json')
+
+def read_notified_groups():
+    if not os.path.exists(NOTIFIED_GROUPS_JSON):
+        return {}
+    try:
+        with open(NOTIFIED_GROUPS_JSON, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def write_notified_groups(data):
+    with open(NOTIFIED_GROUPS_JSON, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def is_user_notified(username, group_key):
+    notified = read_notified_groups()
+    return notified.get(username) == group_key
+
+def mark_user_notified(username, group_key):
+    notified = read_notified_groups()
+    notified[username] = group_key
+    write_notified_groups(notified)

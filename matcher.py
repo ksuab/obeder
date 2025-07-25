@@ -6,6 +6,26 @@ import sys
 from datetime import datetime, time, timedelta
 from typing import List, Dict, Tuple, Optional, Set
 from itertools import combinations
+import logging
+import os
+
+# === Диагностика запуска matcher.py ===
+import os
+os.makedirs('logs', exist_ok=True)
+with open('logs/matcher.log', 'a', encoding='utf-8') as f:
+    f.write('=== matcher.py: запуск скрипта ===\n')
+print('=== matcher.py: запуск скрипта ===')
+
+# Настройка логирования matcher.py
+os.makedirs('logs', exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[
+        logging.FileHandler('logs/matcher.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
 
 
 def validate_input(data: List[Dict]) -> None:
@@ -327,11 +347,12 @@ def main():
     parser.add_argument("-o", "--output", required=True, help="Путь к выходному JSON-файлу")
     args = parser.parse_args()
 
+    logging.info(f"matcher.py ЗАПУЩЕН: input={args.input}, places={args.places}, output={args.output}")
     try:
         print(f"📥 Загружаем пользователей из {args.input}")
         with open(args.input, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        print(f"🔍 Найдено {len(data)} пользователей")
+        logging.info(f"matcher.py: Загружено {len(data)} пользователей из {args.input}")
 
         # Замена: duration_min → max_lunch_duration
         for user in data:
@@ -343,10 +364,12 @@ def main():
 
         with open(args.output, 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
+        logging.info(f"matcher.py: Найдено {len(result)} групп. Результат сохранён в {args.output}")
 
         print(f"✅ Найдено {len(result)} групп на обед. Результат сохранён в {args.output}")
 
     except Exception as e:
+        logging.error(f"matcher.py: Ошибка выполнения: {e}")
         print(f"❌ Ошибка выполнения: {e}")
         sys.exit(1)
 
