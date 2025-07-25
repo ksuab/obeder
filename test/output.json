@@ -1,0 +1,26 @@
+[
+  {
+    "participants": [
+      "user1",
+      "user2"
+    ],
+    "lunch_time": [
+      "17:00",
+      "17:30"
+    ],
+    "place": "Snedi",
+    "maps_link": "https://yandex.ru/maps/-/CHTZm2KP"
+  },
+  {
+    "participants": [
+      "user3",
+      "user4"
+    ],
+    "lunch_time": [
+      "14:31",
+      "15:01"
+    ],
+    "place": "Burger King",
+    "maps_link": "https://yandex.ru/maps/-/CHTZm2LQ"
+  }
+]
