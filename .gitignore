@@ -1,2 +1,3 @@
 data/users_data.csv 
-data/bottoken
+data/bottoken.txt
+__pycache__
