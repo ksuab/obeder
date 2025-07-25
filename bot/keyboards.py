@@ -37,7 +37,7 @@ def get_lunch_duration_keyboard():
 def get_favorite_places_keyboard(places, selected_places):
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=f"{'✅ ' if place in selected_places else ''}{place}", callback_data=f"fav_place:{place}")] for place in places
-    ] + [[InlineKeyboardButton(text="Готово", callback_data="fav_place:done")]])
+    ] + [[InlineKeyboardButton(text="✅ Готово", callback_data="fav_place:done")]])
 
 # Клавиатура выбора нелюбимых мест
 def get_disliked_places_keyboard(places, selected_places):
@@ -49,7 +49,7 @@ def get_disliked_places_keyboard(places, selected_places):
 def get_company_size_keyboard(selected_sizes):
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=f"{'✅ ' if size in selected_sizes else ''}{size}", callback_data=f"size:{size}")] for size in COMPANY_SIZES
-    ] + [[InlineKeyboardButton(text="Готово", callback_data="size:done")]])
+    ] + [[InlineKeyboardButton(text="✅ Готово", callback_data="size:done")]])
 
 # Клавиатура подтверждения
 def get_confirmation_keyboard():
@@ -91,15 +91,28 @@ def get_back_to_menu_keyboard():
         [InlineKeyboardButton(text="Вернуться в главное меню", callback_data="menu:back")]
     ])
 
-def get_lunch_place_keyboard(places):
+def get_lunch_time_start_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=place, callback_data=f"lunch_place:{place}")] for place in places
-    ] + [[InlineKeyboardButton(text="Пропустить", callback_data="lunch_place:skip")]])
+        [InlineKeyboardButton(text=time_opt, callback_data=f"lunch_time_start:{time_opt}")] for time_opt in TIME_OPTIONS
+    ])
 
-def get_lunch_company_keyboard():
+def get_lunch_time_end_keyboard(start_time):
+    filtered_times = [t for t in TIME_OPTIONS if t > start_time]
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=size, callback_data=f"lunch_company:{size}")] for size in COMPANY_SIZES
-    ] + [[InlineKeyboardButton(text="Пропустить", callback_data="lunch_company:skip")]])
+        [InlineKeyboardButton(text=time_opt, callback_data=f"lunch_time_end:{time_opt}")] for time_opt in filtered_times
+    ])
+
+def get_lunch_favorite_places_keyboard(places, selected_places):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=f"{'✅ ' if place in selected_places else ''}{place}", callback_data=f"lunch_place:{place}")] for place in places
+    ] + [[InlineKeyboardButton(text="✅ Готово", callback_data="lunch_place:done")]])
+
+def get_lunch_company_keyboard(selected_sizes=None):
+    if selected_sizes is None:
+        selected_sizes = []
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=f"{'✅ ' if size in selected_sizes else ''}{size}", callback_data=f"lunch_company:{size}")] for size in COMPANY_SIZES
+    ] + [[InlineKeyboardButton(text="✅ Готово", callback_data="lunch_company:done")]])
 
 def get_lunch_confirm_keyboard():
     return InlineKeyboardMarkup(inline_keyboard=[

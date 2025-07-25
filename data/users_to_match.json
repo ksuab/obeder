@@ -5,22 +5,20 @@
       "office": "Аврора",
       "time_slots": [
         [
-          "14:00",
-          "16:00"
+          "12:00",
+          "14:30"
         ]
       ],
       "duration_min": 45,
       "favourite_places": [
-        "Snedi",
-        "Mama",
-        "Restaurant Elite"
+        "Burger King"
       ],
       "non_desirable_places": [
         "Burger King",
         "Quick Bite"
       ],
       "team_size_lst": [
-        "18+"
+        "3-5"
       ]
     }
   }
