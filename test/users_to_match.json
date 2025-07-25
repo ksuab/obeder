@@ -3,45 +3,330 @@
     "login": "user1",
     "parameters": {
       "office": "Avrora",
-      "time_slots": [["17:00", "18:50"]],
-      "duration_min": 30,
-      "favourite_places": ["Mama", "Snedi"],
-      "non_desirable_places": ["Mama"],
-      "team_size_lst": ["2", "3-5", "6+"]
+      "time_slots": [["12:00", "13:30"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi", "Burger King"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2", "3-5"]
     }
   },
   {
     "login": "user2",
     "parameters": {
       "office": "Avrora",
-      "time_slots": [["14:31", "16:50"], ["15:31", "16:40"], ["17:00", "18:50"]],
-      "duration_min": 30,
-      "favourite_places": ["Mama", "Snedi"],
-      "non_desirable_places": ["Mama"],
-      "team_size_lst": ["2", "3-5", "6+"]
+      "time_slots": [["12:00", "13:30"], ["13:00", "14:30"]],
+      "max_lunch_duration": 45,
+      "favourite_places": ["Snedi"],
+      "non_desirable_places": ["Burger King"],
+      "team_size_lst": ["2", "3-5"]
     }
   },
   {
     "login": "user3",
     "parameters": {
       "office": "Avrora",
-      "time_slots": [["14:31", "16:50"], ["15:31", "16:40"], ["17:00", "18:50"]],
-      "duration_min": 30,
-      "favourite_places": ["Burger King"],
-      "non_desirable_places": ["Mama"],
-      "team_size_lst": ["2", "3-5", "6+"]
-
+      "time_slots": [["12:30", "14:00"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi", "Mama"],
+      "non_desirable_places": ["Fast Lunch"],
+      "team_size_lst": ["2"]
     }
   },
   {
     "login": "user4",
     "parameters": {
       "office": "Avrora",
-      "time_slots": [["14:31", "16:50"], ["15:31", "16:40"], ["17:00", "18:50"]],
-      "duration_min": 30,
-      "favourite_places": ["Burger King", "Mama"],
+      "time_slots": [["12:15", "13:45"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi"],
       "non_desirable_places": [],
-      "team_size_lst": ["2", "3-5", "6+"]
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user5",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["13:00", "15:00"]],
+      "max_lunch_duration": 60,
+      "favourite_places": ["Green Garden"],
+      "non_desirable_places": ["Snedi", "Burger King"],
+      "team_size_lst": ["3-5", "6+"]
+    }
+  },
+  {
+    "login": "user6",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["13:00", "14:30"]],
+      "max_lunch_duration": 45,
+      "favourite_places": ["Green Garden", "Quick Bite"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user7",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["14:00", "16:00"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Burger King", "Fast Lunch"],
+      "non_desirable_places": ["Mama"],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user8",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["14:30", "16:30"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Burger King"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2"]
+    }
+  },
+  {
+    "login": "user9",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["15:00", "17:00"]],
+      "max_lunch_duration": 45,
+      "favourite_places": ["Quick Bite", "Snedi"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user10",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["15:30", "17:30"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Quick Bite"],
+      "non_desirable_places": ["Mama", "Snedi"],
+      "team_size_lst": ["2"]
+    }
+  },
+  {
+    "login": "user11",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["12:00", "14:00"], ["16:00", "18:00"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi", "Quick Bite"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user12",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["12:30", "13:30"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi"],
+      "non_desirable_places": ["Burger King"],
+      "team_size_lst": ["2"]
+    }
+  },
+  {
+    "login": "user13",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["17:00", "19:00"]],
+      "max_lunch_duration": 60,
+      "favourite_places": ["Green Garden"],
+      "non_desirable_places": [],
+      "team_size_lst": ["6+"]
+    }
+  },
+  {
+    "login": "user14",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["17:00", "18:30"]],
+      "max_lunch_duration": 45,
+      "favourite_places": ["Green Garden", "Snedi"],
+      "non_desirable_places": [],
+      "team_size_lst": ["3-5", "6+"]
+    }
+  },
+  {
+    "login": "user15",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["17:15", "18:45"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Green Garden"],
+      "non_desirable_places": ["Fast Lunch"],
+      "team_size_lst": ["3-5"]
+    }
+  },
+  {
+    "login": "user16",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["11:30", "13:00"]],
+      "max_lunch_duration": 45,
+      "favourite_places": ["Coffee House"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2"]
+    }
+  },
+  {
+    "login": "user17",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["11:45", "13:15"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Coffee House"],
+      "non_desirable_places": ["Snedi"],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user18",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["14:00", "15:30"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Fast Lunch", "Burger King"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2"]
+    }
+  },
+  {
+    "login": "user19",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["14:15", "15:45"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Fast Lunch"],
+      "non_desirable_places": ["Mama"],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user20",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["16:00", "18:00"]],
+      "max_lunch_duration": 60,
+      "favourite_places": ["Restaurant Elite"],
+      "non_desirable_places": [],
+      "team_size_lst": ["6+"]
+    }
+  },
+  {
+    "login": "user21",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["16:30", "18:30"]],
+      "max_lunch_duration": 45,
+      "favourite_places": ["Restaurant Elite"],
+      "non_desirable_places": ["Snedi"],
+      "team_size_lst": ["3-5", "6+"]
+    }
+  },
+  {
+    "login": "user22",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["12:00", "13:30"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi", "Burger King"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user23",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["12:15", "13:45"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi"],
+      "non_desirable_places": ["Fast Lunch"],
+      "team_size_lst": ["2"]
+    }
+  },
+  {
+    "login": "user24",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["14:30", "16:00"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Quick Bite", "Snedi"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user25",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["15:00", "17:00"]],
+      "max_lunch_duration": 45,
+      "favourite_places": ["Quick Bite"],
+      "non_desirable_places": ["Mama"],
+      "team_size_lst": ["2"]
+    }
+  },
+  {
+    "login": "user26",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["17:00", "19:00"]],
+      "max_lunch_duration": 60,
+      "favourite_places": ["Green Garden"],
+      "non_desirable_places": [],
+      "team_size_lst": ["6+"]
+    }
+  },
+  {
+    "login": "user27",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["13:00", "14:30"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Burger King"],
+      "non_desirable_places": ["Snedi"],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user28",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["13:15", "14:45"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Burger King", "Fast Lunch"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2"]
+    }
+  },
+  {
+    "login": "user29",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["15:30", "17:30"]],
+      "max_lunch_duration": 30,
+      "favourite_places": ["Snedi", "Quick Bite"],
+      "non_desirable_places": [],
+      "team_size_lst": ["2", "3-5"]
+    }
+  },
+  {
+    "login": "user30",
+    "parameters": {
+      "office": "Avrora",
+      "time_slots": [["16:00", "18:00"]],
+      "max_lunch_duration": 45,
+      "favourite_places": ["Green Garden"],
+      "non_desirable_places": ["Fast Lunch"],
+      "team_size_lst": ["3-5"]
     }
   }
 ]
