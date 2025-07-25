@@ -6,6 +6,7 @@ from datetime import datetime, time
 import logging
 import subprocess
 from filelock import FileLock
+import asyncio
 
 from config import USERS_CSV, PLACES_CSV, USERS_TO_MATCH_JSON
 
@@ -189,8 +190,9 @@ def convert_to_match_format(data, username):
 # Запуск matcher.py и получение результата для пользователя
 
 def run_matcher_and_get_result(user_login, users_file, places_file, output_file):
+    print("=== DEBUG: run_matcher_and_get_result вызван ===")
     import logging
-    import os
+    logging.info("=== DEBUG: run_matcher_and_get_result вызван ===")
     log_path = 'logs/bot.log'
     matcher_path = os.path.abspath('matcher.py')
     logging.info(f"[DEBUG] run_matcher_and_get_result вызван для {user_login}, matcher_path={matcher_path}")
@@ -214,6 +216,29 @@ def run_matcher_and_get_result(user_login, users_file, places_file, output_file)
             log_file.write(f"[matcher.py UNEXPECTED ERROR] {e}\n")
             logging.error(f"[DEBUG] matcher.py неожиданная ошибка для {user_login}: {e}")
             raise
+    with open(output_file, "r", encoding="utf-8") as f:
+        results = json.load(f)
+    for group in results:
+        if user_login in group["participants"]:
+            return group
+    return None
+
+async def run_matcher_and_get_result_async(user_login, users_file, places_file, output_file):
+    import sys
+    import logging
+    logging.info("=== DEBUG: run_matcher_and_get_result_async вызван ===")
+    matcher_path = os.path.abspath('matcher.py')
+    proc = await asyncio.create_subprocess_exec(
+        sys.executable, matcher_path,
+        "-i", users_file,
+        "-p", places_file,
+        "-o", output_file,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await proc.communicate()
+    logging.info(f"[matcher.py stdout]\n{stdout.decode()}")
+    logging.info(f"[matcher.py stderr]\n{stderr.decode()}")
     with open(output_file, "r", encoding="utf-8") as f:
         results = json.load(f)
     for group in results:

@@ -5,22 +5,20 @@
       "office": "Аврора",
       "time_slots": [
         [
-          "13:00",
-          "15:30"
+          "12:00",
+          "15:00"
         ]
       ],
-      "max_lunch_duration": 45,
+      "max_lunch_duration": 60,
       "favourite_places": [
-        "Snedi",
         "Mama",
-        "Restaurant Elite"
+        "Snedi"
       ],
       "non_desirable_places": [
-        "Burger King",
         "Quick Bite"
       ],
       "team_size_lst": [
-        "18+"
+        "3-5"
       ]
     }
   },
@@ -30,19 +28,66 @@
       "office": "Аврора",
       "time_slots": [
         [
-          "12:00",
-          "16:00"
+          "11:00",
+          "16:30"
         ]
       ],
       "max_lunch_duration": 60,
       "favourite_places": [
+        "Mama",
+        "Snedi"
+      ],
+      "non_desirable_places": [
+        "Mama"
+      ],
+      "team_size_lst": [
+        "3-5",
+        "2"
+      ]
+    }
+  },
+  {
+    "login": "ksuabr",
+    "parameters": {
+      "office": "Аврора",
+      "time_slots": [
+        [
+          "12:00",
+          "14:00"
+        ]
+      ],
+      "max_lunch_duration": 30,
+      "favourite_places": [
         "Mama"
       ],
       "non_desirable_places": [
-        "Snedi"
+        "Burger King"
       ],
       "team_size_lst": [
-        "2"
+        "3-5"
+      ]
+    }
+  },
+  {
+    "login": "nim_85620",
+    "parameters": {
+      "office": "Аврора",
+      "time_slots": [
+        [
+          "14:00",
+          "15:00"
+        ]
+      ],
+      "max_lunch_duration": 45,
+      "favourite_places": [
+        "Mama",
+        "Snedi"
+      ],
+      "non_desirable_places": [
+        "Quick Bite"
+      ],
+      "team_size_lst": [
+        "3-5"
       ]
     }
   }

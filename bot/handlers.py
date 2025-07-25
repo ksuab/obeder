@@ -23,32 +23,56 @@ from .keyboards import (
     get_lunch_time_start_keyboard, get_lunch_time_end_keyboard, get_duration_keyboard
 )
 from aiogram import Bot
+from aiogram import Router, F, types
 
 logger = logging.getLogger(__name__)
 
 # --- Переместить notify_all_new_groups выше ---
 async def notify_all_new_groups(bot: Bot, output_file: str):
     import json
+    import logging
+    print("notify_all_new_groups CALLED", flush=True)
+    logging.info("notify_all_new_groups CALLED")
     notified = read_notified_groups()
     with open(output_file, 'r', encoding='utf-8') as f:
         groups = json.load(f)
+    # Получим всех пользователей, участвующих в подборе (users_to_match.json)
+    with open('data/users_to_match.json', 'r', encoding='utf-8') as f:
+        users_to_match = json.load(f)
+    match_usernames = set(u['login'] for u in users_to_match)
+    # Получим user_id для этих пользователей из users_data.csv
+    import csv
+    user_id_map = {}
+    try:
+        with open('data/users_data.csv', 'r', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if row['username'] in match_usernames:
+                    user_id_map[row['username']] = int(row['user_id'])
+    except Exception as e:
+        logging.error(f"Ошибка при чтении users_data.csv: {e}")
+    # Соберём всех пользователей, для которых нашлась группа
+    users_with_group = set()
+    for group in groups:
+        if group.get("lunch_time") and group.get("place"):
+            users_with_group.update(group["participants"])
+    # Отправим сообщение тем, у кого нет группы
+    for username in match_usernames - users_with_group:
+        user_id = user_id_map.get(username)
+        logging.info(f"[notify_all_new_groups] Нет группы для {username} (user_id={user_id})")
+        if user_id:
+            try:
+                await bot.send_message(user_id, 'Сегодня больше нет подходящих слотов для обеда. Попробуйте завтра!')
+                logging.info(f"[notify_all_new_groups] Сообщение 'нет слотов' отправлено {username} (user_id={user_id})")
+            except Exception as e:
+                logging.warning(f"Не удалось отправить уведомление {username} ({user_id}): {e}")
+    # Стандартная логика для найденных групп
     for group in groups:
         group_key = f"{sorted(group['participants'])}_{group.get('lunch_time')}_{group.get('place')}"
         for username in group['participants']:
             if not is_user_notified(username, group_key):
-                # Отправить уведомление
-                # Найти user_id по username (по users_data.csv)
-                user_id = None
-                try:
-                    import csv
-                    with open('data/users_data.csv', 'r', encoding='utf-8') as csvfile:
-                        reader = csv.DictReader(csvfile)
-                        for row in reader:
-                            if row['username'] == username:
-                                user_id = int(row['user_id'])
-                                break
-                except Exception:
-                    pass
+                user_id = user_id_map.get(username)
+                logging.info(f"[notify_all_new_groups] Группа: {group}, username={username}, user_id={user_id}")
                 if user_id:
                     if group["lunch_time"] and group["place"]:
                         partners = [p for p in group["participants"] if p != username]
@@ -65,11 +89,14 @@ async def notify_all_new_groups(bot: Bot, output_file: str):
                         )
                     else:
                         msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+                    logging.info(f"[notify_all_new_groups] Пытаюсь отправить сообщение {username} (user_id={user_id}): {msg}")
                     try:
                         await bot.send_message(user_id, msg)
+                        logging.info(f"[notify_all_new_groups] Сообщение отправлено {username} (user_id={user_id})")
                     except Exception as e:
-                        import logging
                         logging.warning(f"Не удалось отправить уведомление {username} ({user_id}): {e}")
+                else:
+                    logging.warning(f"[notify_all_new_groups] Не найден user_id для {username}")
                 mark_user_notified(username, group_key)
 
 # Заменить все вызовы edit_text на безопасный вариант с обработкой TelegramBadRequest
@@ -111,6 +138,12 @@ async def cmd_start(message: Message, state: FSMContext):
     else:
         await start_profile_creation(message, state)
 
+async def cmd_notify_groups(message: types.Message):
+    await notify_all_new_groups(message.bot, "data/output.json")
+    await message.answer("Рассылка по группам из output.json выполнена.")
+
+router = Router()
+
 # Обработчик для главного меню
 async def process_main_menu(callback_query: CallbackQuery, state: FSMContext):
     action = callback_query.data.split(':')[1]
@@ -119,6 +152,47 @@ async def process_main_menu(callback_query: CallbackQuery, state: FSMContext):
     user_data = get_user_data(user_id)
     
     if action == "book_lunch":
+        # --- ДОБАВЛЕНО: автозаполнение users_to_match.json из профиля ---
+        if user_data:
+            from .utils import update_user_to_match, run_matcher_and_get_result_async, convert_to_match_format
+            import asyncio
+            import json
+            import logging
+            import os
+            match_params = convert_to_match_format(user_data, username)
+            update_user_to_match(username, match_params)
+            # Проверяем, сколько пользователей сейчас в users_to_match.json
+            with open("data/users_to_match.json", "r", encoding="utf-8") as f:
+                users_to_match = json.load(f)
+            if len(users_to_match) >= 2:
+                # Очищаем notified_groups.json перед подбором
+                notified_path = os.path.join("data", "notified_groups.json")
+                if os.path.exists(notified_path):
+                    os.remove(notified_path)
+                from config import USERS_TO_MATCH_JSON, PLACES_CSV
+                output_file = os.path.join("data", "output.json")
+                await run_matcher_and_get_result_async(username, USERS_TO_MATCH_JSON, PLACES_CSV, output_file)
+                logging.info("BEFORE notify_all_new_groups")
+                print("BEFORE notify_all_new_groups", flush=True)
+                try:
+                    await notify_all_new_groups(callback_query.bot, output_file)
+                except Exception as e:
+                    logging.error(f"notify_all_new_groups ERROR: {e}")
+                    print(f"notify_all_new_groups ERROR: {e}", flush=True)
+                logging.info("AFTER notify_all_new_groups")
+                print("AFTER notify_all_new_groups", flush=True)
+                await safe_edit_text(callback_query.message,
+                    "Компания на обед подбирается! Когда найдется подходящая компания, мы вас оповестим!",
+                    reply_markup=get_back_to_menu_keyboard()
+                )
+            else:
+                await safe_edit_text(callback_query.message,
+                    "Вы записаны, ждите компанию! Как только кто-то ещё запишется, мы подберём группу.",
+                    reply_markup=get_back_to_menu_keyboard()
+                )
+            await state.set_state(MainMenu.main)
+            await callback_query.answer()
+            return
         keyboard = get_lunch_preference_keyboard()
         await safe_edit_text(callback_query.message,
             "Как вы хотите найти компанию на обед?",
@@ -442,7 +516,12 @@ async def process_lunch_confirmation(callback_query: CallbackQuery, state: FSMCo
                             f"Партнеры: {partners_str}"
                         )
                     else:
-                        msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
+                        # --- ДОБАВЛЕНО: обработка одиночного обеда ---
+                        user_data_check = get_user_data(user_id)
+                        if user_data_check and user_data_check.get('company_size') == ['1']:
+                            msg = "Вы успешно записаны на обед в одиночку! Приятного аппетита :)"
+                        else:
+                            msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
                 else:
                     msg = "Пока что мы не смогли подобрать вам пару или компанию для обеда, но обязательно подберём!"
                 await callback_query.message.answer(msg)
@@ -571,6 +650,7 @@ async def process_edit_field(callback_query: CallbackQuery, state: FSMContext):
     elif field == "company_size":
         # Редактирование размера компании
         user_id = callback_query.from_user.id
+        username = callback_query.from_user.username or f"user{user_id}"
         user_data = get_user_data(user_id)
         company_size = user_data.get('company_size', []) if user_data else []
         
@@ -792,6 +872,8 @@ async def process_lunch_duration(callback_query: CallbackQuery, state: FSMContex
 
 # Обработчик выбора любимых мест
 async def process_favorite_places(callback_query: CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    username = callback_query.from_user.username or f"user{user_id}"
     choice = callback_query.data.split(':')[1]
     
     # Получаем текущие данные
@@ -981,8 +1063,9 @@ async def process_disliked_places(callback_query: CallbackQuery, state: FSMConte
 
 # Обработчик выбора размера компании
 async def process_company_size(callback_query: CallbackQuery, state: FSMContext):
+    user_id = callback_query.from_user.id
+    username = callback_query.from_user.username or f"user{user_id}"
     choice = callback_query.data.split(':')[1]
-    
     # Получаем текущие данные
     data = await state.get_data()
     company_size = data.get('company_size', [])
@@ -1266,6 +1349,7 @@ async def process_back_in_custom_lunch(callback_query: CallbackQuery, state: FSM
 def register_all_handlers(dp):
     # Регистрация обработчиков команд
     dp.message.register(cmd_start, Command("start"))
+    dp.message.register(cmd_notify_groups, Command("notify_groups"))
 
     # Регистрация обработчиков для главного меню
     dp.callback_query.register(process_main_menu, F.data.startswith("menu:"))

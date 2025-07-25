@@ -1,0 +1,379 @@
+=== matcher.py: запуск скрипта ===
+2025-07-25 16:23:13,869 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 16:23:13,869 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 16:23:13,872 INFO matcher.py: Найдено 2 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 16:24:08,752 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 16:24:08,752 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 16:24:08,753 INFO matcher.py: Найдено 2 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 16:35:08,441 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 16:35:08,442 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 16:35:08,443 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:02:44,003 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:02:44,007 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:02:44,007 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:02:44,007 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:02:44,009 INFO [DEBUG matcher] login=evenolt,agmikheeva, office=Аврора, fav=multi, non_des=multi, team_size_lst=multi, office_places=0
+2025-07-25 17:02:44,009 INFO [DEBUG matcher] login=evenolt, office=Аврора, fav=['Snedi', 'Mama'], non_des=['Quick Bite'], team_size_lst=['2'], office_places=0
+2025-07-25 17:02:44,009 INFO [DEBUG matcher] login=agmikheeva, office=Аврора, fav=['Snedi', 'Coffee House'], non_des=['Mama'], team_size_lst=['1', '2'], office_places=0
+2025-07-25 17:02:44,009 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:06:21,142 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:06:21,144 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:06:21,144 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:06:21,144 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:06:21,146 INFO [DEBUG matcher] login=agmikheeva,evenolt, office=Аврора, fav=multi, non_des=multi, team_size_lst=multi, office_places=0
+2025-07-25 17:06:21,146 INFO [DEBUG matcher] login=evenolt, office=Аврора, fav=['Snedi', 'Mama'], non_des=['Quick Bite'], team_size_lst=['2'], office_places=0
+2025-07-25 17:06:21,146 INFO [DEBUG matcher] login=agmikheeva, office=Аврора, fav=[], non_des=['Mama'], team_size_lst=['1'], office_places=0
+2025-07-25 17:06:21,146 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:06:31,793 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:06:31,796 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:06:31,796 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:06:31,796 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:06:31,798 INFO [DEBUG matcher] login=agmikheeva,evenolt, office=Аврора, fav=multi, non_des=multi, team_size_lst=multi, office_places=0
+2025-07-25 17:06:31,798 INFO [DEBUG matcher] login=evenolt, office=Аврора, fav=['Mama', 'Snedi'], non_des=['Quick Bite'], team_size_lst=['2'], office_places=0
+2025-07-25 17:06:31,798 INFO [DEBUG matcher] login=agmikheeva, office=Аврора, fav=[], non_des=['Mama'], team_size_lst=['1'], office_places=0
+2025-07-25 17:06:31,798 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:09:35,587 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:09:35,590 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:09:35,590 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:09:35,590 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:09:35,592 INFO [DEBUG matcher] login=agmikheeva,evenolt, office=Аврора, fav=multi, non_des=multi, team_size_lst=multi, office_places=0
+2025-07-25 17:09:35,592 INFO [DEBUG matcher] login=evenolt, office=Аврора, fav=['Snedi', 'Mama'], non_des=['Quick Bite'], team_size_lst=['2'], office_places=0
+2025-07-25 17:09:35,592 INFO [DEBUG matcher] login=agmikheeva, office=Аврора, fav=[], non_des=['Mama'], team_size_lst=['1'], office_places=0
+2025-07-25 17:09:35,592 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:09:37,802 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:09:37,805 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:09:37,805 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:09:37,805 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:09:37,807 INFO [DEBUG matcher] login=agmikheeva,evenolt, office=Аврора, fav=multi, non_des=multi, team_size_lst=multi, office_places=0
+2025-07-25 17:09:37,807 INFO [DEBUG matcher] login=evenolt, office=Аврора, fav=['Snedi', 'Mama'], non_des=['Quick Bite'], team_size_lst=['2'], office_places=0
+2025-07-25 17:09:37,807 INFO [DEBUG matcher] login=agmikheeva, office=Аврора, fav=[], non_des=['Mama'], team_size_lst=['1'], office_places=0
+2025-07-25 17:09:37,807 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:11:07,627 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:11:07,629 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:11:07,630 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:11:07,630 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:11:07,631 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:12:53,014 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:12:53,017 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:12:53,017 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:12:53,017 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:12:53,019 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:14:52,874 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:14:52,877 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:14:52,877 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:14:52,877 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:14:52,879 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:14:57,999 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:14:58,002 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:14:58,002 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:14:58,002 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:14:58,003 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:15:15,688 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:15:15,691 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:15:15,691 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:15:15,691 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:15:15,693 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:15:18,344 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:15:18,346 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:15:18,346 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:15:18,346 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:15:18,347 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:15:54,904 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:15:54,907 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:15:54,907 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:15:54,907 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:15:54,909 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:18:15,041 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:18:15,044 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:18:15,045 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:18:15,045 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:18:15,047 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:20:13,575 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:20:13,579 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:20:13,579 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:20:13,579 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:20:13,581 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:22:50,543 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:22:50,546 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:22:50,546 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:22:50,546 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:22:50,549 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:24:00,000 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:24:00,003 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:24:00,003 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:24:00,003 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:24:00,005 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:24:16,397 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:24:16,400 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:24:16,400 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:24:16,400 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:24:16,401 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:25:44,169 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:25:44,172 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:25:44,172 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:25:44,172 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:25:44,174 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:26:00,737 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:26:00,740 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:26:00,740 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:26:00,740 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:26:00,742 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:29:47,297 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:29:47,300 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:29:47,300 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:29:47,300 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:29:47,303 INFO matcher.py: Найдено 0 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:30:33,923 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:30:33,926 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:30:33,926 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:30:33,926 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:30:33,928 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:31:32,494 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:31:32,496 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:31:32,497 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:31:32,497 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:31:32,498 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:35:03,693 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:35:03,696 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:35:03,697 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:35:03,697 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:35:03,699 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:36:36,573 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:36:36,577 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:36:36,577 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:36:36,577 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:36:36,579 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:39:33,173 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:39:33,178 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:39:33,179 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:39:33,179 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:39:33,182 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:40:12,377 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:40:12,381 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:40:12,381 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:40:12,381 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:40:12,383 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:40:40,085 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:40:40,088 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:40:40,088 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:40:40,088 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:40:40,090 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('14:00', '15:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:40:40,090 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:43:59,927 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:43:59,930 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:43:59,930 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:43:59,930 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:43:59,932 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:43:59,932 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:45:24,406 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:45:24,410 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:45:24,410 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:45:24,410 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:45:24,412 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:45:24,412 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:46:12,269 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:46:12,272 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:46:12,272 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:46:12,272 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:46:12,274 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:46:12,274 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:46:21,203 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:46:21,206 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:46:21,206 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:46:21,206 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:46:21,208 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:46:21,208 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:48:00,240 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:48:00,243 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:48:00,243 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:48:00,243 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:48:00,245 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:48:00,245 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:48:12,589 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:48:12,592 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:48:12,592 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:48:12,592 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:48:12,594 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:48:12,594 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:49:35,245 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:49:35,248 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:49:35,248 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:49:35,248 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:49:35,249 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:49:35,250 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:49:46,892 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:49:46,894 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:49:46,894 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:49:46,894 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:49:46,896 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:49:46,896 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:51:12,485 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:51:12,488 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:51:12,488 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:51:12,488 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:51:12,490 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:51:12,491 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:51:22,056 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:51:22,059 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:51:22,059 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:51:22,059 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:51:22,061 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:51:22,061 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:52:40,026 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:52:40,028 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:52:40,028 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:52:40,028 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:52:40,031 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:52:40,031 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:52:50,109 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:52:50,112 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:52:50,112 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:52:50,112 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:52:50,114 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:52:50,114 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:55:37,985 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:55:37,988 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:55:37,988 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:55:37,988 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:55:37,990 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:55:37,990 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:55:41,885 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:55:41,887 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:55:41,887 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:55:41,887 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:55:41,889 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:55:41,889 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:57:30,913 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:57:30,916 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:57:30,916 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:57:30,916 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:57:30,918 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:57:30,918 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 17:57:40,977 INFO === LOGGING CONFIGURED ===
+2025-07-25 17:57:40,979 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 17:57:40,980 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 17:57:40,980 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 17:57:40,981 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 17:57:40,981 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:00:30,475 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:00:30,478 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:00:30,478 INFO matcher.py: Загружено 2 пользователей из data/users_to_match.json
+2025-07-25 18:00:30,478 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:00:30,481 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:00:30,481 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:02:27,512 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:02:27,515 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:02:27,515 INFO matcher.py: Загружено 3 пользователей из data/users_to_match.json
+2025-07-25 18:02:27,515 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:02:27,518 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:02:27,518 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:02:28,514 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:02:28,518 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:02:28,518 INFO matcher.py: Загружено 3 пользователей из data/users_to_match.json
+2025-07-25 18:02:28,518 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:02:28,521 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:02:28,521 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:02:47,092 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:02:47,095 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:02:47,095 INFO matcher.py: Загружено 3 пользователей из data/users_to_match.json
+2025-07-25 18:02:47,095 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:02:47,098 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:02:47,098 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:02:58,541 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:02:58,544 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:02:58,544 INFO matcher.py: Загружено 3 пользователей из data/users_to_match.json
+2025-07-25 18:02:58,544 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:02:58,546 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:02:58,546 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:03:06,279 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:03:06,281 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:03:06,281 INFO matcher.py: Загружено 3 пользователей из data/users_to_match.json
+2025-07-25 18:03:06,282 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:03:06,284 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:03:06,284 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:06:09,929 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:06:09,932 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:06:09,932 INFO matcher.py: Загружено 3 пользователей из data/users_to_match.json
+2025-07-25 18:06:09,932 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:06:09,935 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:06:09,935 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:07:55,374 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:07:55,378 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:07:55,378 INFO matcher.py: Загружено 3 пользователей из data/users_to_match.json
+2025-07-25 18:07:55,378 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:07:55,381 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt'], 'lunch_time': ('12:00', '13:00'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:07:55,381 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:08:03,159 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:08:03,162 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:08:03,162 INFO matcher.py: Загружено 3 пользователей из data/users_to_match.json
+2025-07-25 18:08:03,162 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:08:03,165 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt', 'ksuabr'], 'lunch_time': ('12:00', '12:30'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:08:03,165 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:08:13,202 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:08:13,205 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:08:13,205 INFO matcher.py: Загружено 4 пользователей из data/users_to_match.json
+2025-07-25 18:08:13,205 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:08:13,208 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt', 'ksuabr'], 'lunch_time': ('12:00', '12:30'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:08:13,209 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json
+=== matcher.py: запуск скрипта ===
+2025-07-25 18:08:16,601 INFO === LOGGING CONFIGURED ===
+2025-07-25 18:08:16,604 INFO matcher.py ЗАПУЩЕН: input=data/users_to_match.json, places=data/places.csv, output=data/output.json
+2025-07-25 18:08:16,604 INFO matcher.py: Загружено 4 пользователей из data/users_to_match.json
+2025-07-25 18:08:16,604 INFO === DEBUG: match_lunch вызван ===
+2025-07-25 18:08:16,608 INFO DEBUG: FINAL RESULT = [{'participants': ['agmikheeva', 'evenolt', 'ksuabr'], 'lunch_time': ('12:00', '12:30'), 'place': 'Snedi', 'maps_link': 'https://yandex.ru/maps/-/CHTZm2KP'}]
+2025-07-25 18:08:16,608 INFO matcher.py: Найдено 1 групп. Результат сохранён в data/output.json

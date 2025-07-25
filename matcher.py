@@ -14,10 +14,13 @@ import os
 os.makedirs('logs', exist_ok=True)
 with open('logs/matcher.log', 'a', encoding='utf-8') as f:
     f.write('=== matcher.py: запуск скрипта ===\n')
-print('=== matcher.py: запуск скрипта ===')
+print('=== matcher.py: запуск скрипта ===', flush=True)
+print('=== DEBUG: matcher.py действительно запускается ===', flush=True)
 
 # Настройка логирования matcher.py
 os.makedirs('logs', exist_ok=True)
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(message)s',
@@ -26,6 +29,8 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+logging.info('=== LOGGING CONFIGURED ===')
+print('=== LOGGING CONFIGURED PRINT ===', flush=True)
 
 
 def validate_input(data: List[Dict]) -> None:
@@ -104,14 +109,11 @@ def load_places(filename: str) -> List[Dict]:
 
 def find_common_time_slot(users: List[Dict]) -> Optional[Tuple[str, str]]:
     """
-    Находит общий временной слот, учитывая, что:
-    - У каждого пользователя есть временные окна.
-    - Группа должна уложиться в самое короткое доступное время (max_lunch_duration).
+    Находит общий временной слот, который начинается не раньше, чем через 5 минут от текущего времени.
     """
     if any(not u["parameters"]["time_slots"] for u in users):
         return ("12:00", "13:00")  # fallback
 
-    # Преобразуем слоты в объекты time
     user_time_slots = []
     for user in users:
         slots = []
@@ -122,13 +124,12 @@ def find_common_time_slot(users: List[Dict]) -> Optional[Tuple[str, str]]:
                 slots.append((start_t, end_t))
         user_time_slots.append(slots)
 
-    # Пересекаем слоты всех пользователей
     common = user_time_slots[0]
     for user_slots in user_time_slots[1:]:
         new_common = []
         for s1 in common:
             for s2 in user_slots:
-                if s1[0] < s2[1] and s2[0] < s1[1]:  # есть пересечение
+                if s1[0] < s2[1] and s2[0] < s1[1]:
                     start = max(s1[0], s2[0])
                     end = min(s1[1], s2[1])
                     if start < end:
@@ -137,15 +138,17 @@ def find_common_time_slot(users: List[Dict]) -> Optional[Tuple[str, str]]:
         if not common:
             return None
 
-    # Максимальная длительность, которую может себе позволить самый "занятой" участник
     max_allowed_duration = min(u["parameters"]["max_lunch_duration"] for u in users)
     max_duration_td = timedelta(minutes=max_allowed_duration)
 
-    # Ищем самое раннее окно, которое помещается в max_allowed_duration
+    now = datetime.now().time()
+    min_start = (datetime.combine(datetime.today(), now) + timedelta(minutes=5)).time()
+
     for start, end in sorted(common):
+        if start < min_start:
+            continue  # пропускаем слоты, которые уже прошли или слишком близко
         slot_duration = datetime.combine(datetime.today(), end) - datetime.combine(datetime.today(), start)
         if slot_duration >= max_duration_td:
-            # Используем ровно max_duration минут, начиная с `start`
             optimal_end = (datetime.combine(datetime.today(), start) + max_duration_td).time()
             if optimal_end <= end:
                 return (start.strftime("%H:%M"), optimal_end.strftime("%H:%M"))
@@ -185,40 +188,65 @@ def is_team_size_compatible(users: List[Dict], team_size: int) -> bool:
 
 
 def find_compatible_places(users: List[Dict], places: List[Dict]) -> List[Dict]:
-    """Находит места, которые НРАВЯТСЯ ВСЕМ (входят в favourite_places каждого) и не запрещены."""
-    office = users[0]["parameters"]["office"]
+    debug_msg = f"DEBUG: find_compatible_places: users={users}, places_office={[p['name'] for p in places if p['office_name'].strip().lower()==users[0]['parameters']['office'].strip().lower()]}"
+    print(debug_msg, flush=True)
+    with open('logs/matcher_debug.log', 'a', encoding='utf-8') as dbg:
+        dbg.write(debug_msg + '\n')
+    office = users[0]["parameters"]["office"].strip().lower()
     team_size = len(users)
 
     # Проверка офиса
-    if any(user["parameters"]["office"] != office for user in users):
+    if any(user["parameters"]["office"].strip().lower() != office for user in users):
         return []
 
     # Проверка размера группы
     if not is_team_size_compatible(users, team_size):
         return []
 
+    # --- Изменено: если одиночка, подбирать любое место офиса, кроме non_desirable_places ---
+    if len(users) == 1:
+        non_des = set(users[0]["parameters"].get("non_desirable_places", []))
+        compatible = []
+        for place in places:
+            if place["office_name"].strip().lower() != office:
+                continue
+            if place["name"] in non_des:
+                continue
+            if place["max_table_size"] < team_size:
+                continue
+            compatible.append(place)
+        print(f"DEBUG: одиночка, подходящие места: {[p['name'] for p in compatible]}", flush=True)
+        with open('logs/matcher_debug.log', 'a', encoding='utf-8') as dbg:
+            dbg.write(f"DEBUG: одиночка, подходящие места: {[p['name'] for p in compatible]}\n")
+        return compatible
+
     # Находим ОБЩИЕ любимые места
     common_fav = None
     for user in users:
         fav_set = set(user["parameters"]["favourite_places"])
         common_fav = fav_set if common_fav is None else common_fav & fav_set
-    if not common_fav:
-        return []  # Нет общего любимого — нет группы
-
-    # Фильтруем места: только в общих любимых, правильный офис, размер стола
     compatible = []
     for place in places:
-        if place["office_name"] != office:
-            continue
-        if place["name"] not in common_fav:
+        if place["office_name"].strip().lower() != office:
             continue
         if place["max_table_size"] < team_size:
             continue
-        # Дополнительно: убедимся, что никто не запрещает это место
-        if any(place["name"] in user["parameters"]["non_desirable_places"] for user in users):
+        # Если есть общие любимые места — только они
+        if common_fav and place["name"] not in common_fav:
             continue
+        # Если нет общих любимых — брать любые, кроме нелюбимых
+        if not common_fav:
+            skip = False
+            for user in users:
+                if place["name"] in user["parameters"].get("non_desirable_places", []):
+                    skip = True
+                    break
+            if skip:
+                continue
         compatible.append(place)
-
+    print(f"DEBUG: совместимые места: {[p['name'] for p in compatible]}", flush=True)
+    with open('logs/matcher_debug.log', 'a', encoding='utf-8') as dbg:
+        dbg.write(f"DEBUG: совместимые места: {[p['name'] for p in compatible]}\n")
     return compatible
 
 
@@ -231,21 +259,28 @@ def process_users(users: List[Dict]) -> List[Dict]:
 
 
 def match_lunch_group(users: List[Dict], places: List[Dict]) -> Optional[Dict]:
-    """Сопоставляет группу пользователей для обеда."""
-    if len(users) == 1:
-        return {
-            "participants": [users[0]["login"]],
-            "lunch_time": None,
-            "place": None,
-            "maps_link": None
-        }
-
+    debug_msg = f"DEBUG: match_lunch_group: users={users}"
+    print(debug_msg, flush=True)
+    with open('logs/matcher_debug.log', 'a', encoding='utf-8') as dbg:
+        dbg.write(debug_msg + '\n')
     common_slot = find_common_time_slot(users)
+    print(f"DEBUG: common_slot={common_slot}", flush=True)
+    with open('logs/matcher_debug.log', 'a', encoding='utf-8') as dbg:
+        dbg.write(f"DEBUG: common_slot={common_slot}\n")
     if common_slot is None:
+        print("DEBUG: common_slot is None, return None", flush=True)
+        with open('logs/matcher_debug.log', 'a', encoding='utf-8') as dbg:
+            dbg.write("DEBUG: common_slot is None, return None\n")
         return None
 
     compatible_places = find_compatible_places(users, places)
+    print(f"DEBUG: compatible_places={[p['name'] for p in compatible_places]}", flush=True)
+    with open('logs/matcher_debug.log', 'a', encoding='utf-8') as dbg:
+        dbg.write(f"DEBUG: compatible_places={[p['name'] for p in compatible_places]}\n")
     if not compatible_places:
+        print("DEBUG: compatible_places is empty, return None", flush=True)
+        with open('logs/matcher_debug.log', 'a', encoding='utf-8') as dbg:
+            dbg.write("DEBUG: compatible_places is empty, return None\n")
         return None
 
     best_place = min(compatible_places, key=lambda p: p["time_to_go_min"])
@@ -259,8 +294,12 @@ def match_lunch_group(users: List[Dict], places: List[Dict]) -> Optional[Dict]:
 
 def find_all_lunch_groups(users: List[Dict], places: List[Dict]) -> List[Dict]:
     if len(users) == 1:
-        match = match_lunch_group(users, places)
-        return [match] if match else []
+        team_size_lst = users[0]["parameters"].get("team_size_lst", [])
+        if "1" in team_size_lst:
+            match = match_lunch_group(users, places)
+            return [match] if match else []
+        else:
+            return []
 
     for user in users:
         if "duration_min" in user["parameters"]:
@@ -332,9 +371,12 @@ def find_all_lunch_groups(users: List[Dict], places: List[Dict]) -> List[Dict]:
 
 
 def match_lunch(data: List[Dict], places_file: str) -> List[Dict]:
-    """Основная функция: мэтчит людей для обеда."""
+    print('=== DEBUG: match_lunch вызван ===', flush=True)
+    import logging
+    logging.info('=== DEBUG: match_lunch вызван ===')
     validate_input(data)
     places = load_places(places_file)
+    print(f"DEBUG: loaded places: {[(p['office_name'], p['name']) for p in places]}", flush=True)
     processed_users = process_users(data)
     result = find_all_lunch_groups(processed_users, places)
     return result if result else []
@@ -361,6 +403,9 @@ def main():
             print(f"   - {user['login']} (max_lunch_duration={user['parameters']['max_lunch_duration']} мин)")
 
         result = match_lunch(data, args.places)
+
+        print(f"DEBUG: FINAL RESULT = {result}", flush=True)
+        logging.info(f"DEBUG: FINAL RESULT = {result}")
 
         with open(args.output, 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=2)

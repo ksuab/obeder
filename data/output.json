@@ -1,18 +1,15 @@
 [
   {
     "participants": [
-      "evenolt"
+      "agmikheeva",
+      "evenolt",
+      "ksuabr"
     ],
-    "lunch_time": null,
-    "place": null,
-    "maps_link": null
-  },
-  {
-    "participants": [
-      "agmikheeva"
+    "lunch_time": [
+      "12:00",
+      "12:30"
     ],
-    "lunch_time": null,
-    "place": null,
-    "maps_link": null
+    "place": "Snedi",
+    "maps_link": "https://yandex.ru/maps/-/CHTZm2KP"
   }
 ]
